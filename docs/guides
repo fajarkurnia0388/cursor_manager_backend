@@ -1,0 +1,223 @@
+# Backend Setup Guide
+
+Panduan lengkap untuk setup Python backend dengan Native Messaging.
+
+## Prerequisites
+
+- Python 3.8+ terinstall
+- Chrome browser
+- Cursor Manager Extension sudah terinstall
+
+## Step 1: Install Python Backend
+
+1. **Jalankan installer:**
+
+```bash
+cd backend
+python install.py
+```
+
+2. **Catat Extension ID:**
+   - Buka Chrome Extensions (`chrome://extensions/`)
+   - Enable "Developer mode"
+   - Lihat ID extension (contoh: `abcdefghijklmnopqrstuvwxyz123456`)
+
+3. **Update Extension ID di installer:**
+
+Edit `backend/install.py` line 11:
+
+```python
+EXTENSION_ID = "abcdefghijklmnopqrstuvwxyz123456"  # Ganti dengan ID asli
+```
+
+4. **Re-install dengan Extension ID yang benar:**
+
+```bash
+python install.py
+```
+
+## Step 2: Verify Installation
+
+1. **Test CLI:**
+
+```bash
+python cli.py version
+```
+
+Output harus menampilkan:
+```
+Cursor Manager Backend v1.0.0
+Database Schema v1
+Database Location: C:\Users\YourName\cursor_manager\data.db
+```
+
+2. **Test Backend Connection:**
+
+Buka extension dan check status di bottom panel. Harus muncul:
+- ✅ Backend Status: Connected
+- Version: 1.0.0
+
+## Step 3: Migration (Optional)
+
+Jika sudah ada data di Chrome Storage, migrate ke backend:
+
+1. **Buka Extension Sidepanel**
+2. **Klik Settings → Backend**
+3. **Klik "Migrate to Backend"**
+
+Atau via CLI:
+
+```bash
+python cli.py accounts import path/to/accounts.json
+```
+
+## Directory Structure Setelah Install
+
+```
+C:\Users\YourName\cursor_manager\
+├── data.db                    # SQLite database
+├── logs\
+│   └── backend.log           # Backend logs
+└── backups\                  # Auto backups
+    └── data_backup_*.db
+```
+
+## Manifest Location
+
+Native messaging manifest akan di-install di:
+
+**Windows:**
+```
+%APPDATA%\Google\Chrome\NativeMessagingHosts\com.cursor.manager.json
+```
+
+**macOS:**
+```
+~/Library/Application Support/Google/Chrome/NativeMessagingHosts/com.cursor.manager.json
+```
+
+**Linux:**
+```
+~/.config/google-chrome/NativeMessagingHosts/com.cursor.manager.json
+```
+
+## Troubleshooting
+
+### Backend Not Connected
+
+1. **Check manifest file exists:**
+
+Windows:
+```powershell
+Get-Content "$env:APPDATA\Google\Chrome\NativeMessagingHosts\com.cursor.manager.json"
+```
+
+2. **Verify Extension ID:**
+
+Manifest harus punya Extension ID yang benar:
+```json
+{
+  "allowed_origins": [
+    "chrome-extension://YOUR_ACTUAL_ID/"
+  ]
+}
+```
+
+3. **Check Python path:**
+
+Manifest harus point ke Python executable yang benar:
+```json
+{
+  "path": "C:/Users/YourName/cursor_manager/native_host.py"
+}
+```
+
+4. **Test backend directly:**
+
+```bash
+cd C:\Users\YourName\cursor_manager
+python native_host.py
+```
+
+Jika ada error, akan muncul di console.
+
+### Logs
+
+Check backend logs untuk debugging:
+
+```bash
+type %USERPROFILE%\cursor_manager\logs\backend.log
+```
+
+Atau buka di notepad:
+```bash
+notepad %USERPROFILE%\cursor_manager\logs\backend.log
+```
+
+### Permission Issues
+
+Windows mungkin block Python script. Allow di Windows Security.
+
+### Database Locked
+
+Jika database locked:
+
+1. Close semua instance Chrome
+2. Delete lock file (jika ada)
+3. Restart Chrome
+
+## Uninstall
+
+```bash
+python install.py uninstall
+```
+
+Ini akan:
+- Remove manifest file
+- Ask apakah mau delete backend files dan database
+
+## CLI Commands Cheat Sheet
+
+```bash
+# Version info
+python cli.py version
+
+# List accounts
+python cli.py accounts list
+python cli.py accounts list --status active
+
+# Show account details
+python cli.py accounts show <id>
+
+# Create account
+python cli.py accounts create email@example.com password123
+
+# Import from JSON
+python cli.py accounts import accounts.json
+
+# Export to JSON
+python cli.py accounts export output.json
+
+# Statistics
+python cli.py accounts stats
+
+# Backup
+python cli.py backup
+
+# Restore
+python cli.py restore path/to/backup.db
+
+# Cards management
+python cli.py cards list
+python cli.py cards show <id>
+```
+
+## Next Steps
+
+1. ✅ Backend terinstall dan connected
+2. ✅ Data sudah di-migrate (jika ada)
+3. Test CRUD operations via extension
+4. Setup auto-backup (optional)
+
+Selesai! Backend sekarang aktif dan extension akan otomatis menggunakan backend untuk semua operasi data.
+
