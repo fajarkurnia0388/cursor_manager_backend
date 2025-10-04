@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Cursor Manager Pro - Sidebar</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="sidepanel-modern.css" />
+  </head>
+  <body>
+    <div id="sidebar-app">
+      <!-- Header with Modern Gradient -->
+      <div class="sidebar-header">
+        <div class="title">
+          <span class="icon">🛡️</span>
+          <h2>Cursor Manager Pro</h2>
+        </div>
+        <div class="header-actions">
+          <button id="darkModeToggle" class="icon-btn" title="Toggle Dark Mode">
+            🌙
+          </button>
+          <button id="refreshBtn" class="icon-btn" title="Refresh">🔄</button>
+        </div>
+      </div>
+
+      <!-- Current Account Section with Modern Card Style -->
+      <div class="current-account-section">
+        <div class="current-label">Active Account</div>
+        <div class="current-account" id="currentAccount">
+          <span class="account-icon">🔴</span>
+          <div class="account-details">
+            <span class="account-name">Not logged in</span>
+            <span class="account-status"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab Navigation with Bypass Testing -->
+      <div class="tab-navigation">
+        <button id="accountsTab" class="tab-btn active">👤 Accounts</button>
+        <button id="paymentsTab" class="tab-btn">💳 Cards</button>
+        <button id="bypassTab" class="tab-btn bypass-tab">🛡️ Bypass</button>
+      </div>
+
+      <!-- Accounts Tab Content -->
+      <div id="accountsContent" class="tab-content">
+        <!-- Quick Actions -->
+        <div class="quick-actions">
+          <button id="addAccountBtn" class="btn btn-primary btn-sm">
+            ➕ Add Account
+          </button>
+          <button id="exportCurrentBtn" class="btn btn-secondary btn-sm">
+            💾 Export
+          </button>
+          <button id="importFromDownloadsBtn" class="btn btn-secondary btn-sm">
+            📁 Import Files
+          </button>
+          <button id="refreshStatusBtn" class="btn btn-success btn-sm">
+            🔄 Refresh Status
+          </button>
+        </div>
+
+        <!-- Advanced Actions -->
+        <div class="advanced-actions">
+          <button id="toggleAdvancedBtn" class="btn btn-link btn-sm">
+            ⚙️ Advanced Tools
+          </button>
+          <div id="advancedPanel" class="advanced-panel" style="display: none">
+            <button id="importFolderBtn" class="btn btn-secondary btn-sm">
+              📂 Import Folder
+            </button>
+            <button
+              id="consolidateDuplicatesBtn"
+              class="btn btn-secondary btn-sm"
+            >
+              🔧 Fix Duplicates
+            </button>
+            <button id="clearAllDataBtn" class="btn btn-danger btn-sm">
+              🗑️ Clear All Data
+            </button>
+            <hr style="margin: 8px 0; border: 1px solid var(--border-color)" />
+            <button id="deleteFreeAccountBtn" class="btn btn-danger btn-sm">
+              💀 Delete Free Account
+            </button>
+            <button id="deleteProTrialAccountBtn" class="btn btn-danger btn-sm">
+              ⚡ Delete Pro Trial Account
+            </button>
+          </div>
+        </div>
+
+        <!-- Accounts List -->
+        <div class="accounts-section">
+          <div class="section-header">
+            <h3>Accounts</h3>
+            <span id="accountsCount" class="count">(0)</span>
+          </div>
+
+          <!-- Account Filters -->
+          <div class="account-filters">
+            <div class="filter-row">
+              <input
+                type="text"
+                id="accountFilterInput"
+                placeholder="Filter accounts by name, email..."
+                class="filter-input"
+              />
+              <select id="accountStatusFilter" class="filter-select">
+                <option value="">All Status</option>
+                <option value="free">Free</option>
+                <option value="pro trial">Pro Trial</option>
+                <option value="pro plan">Pro Plan</option>
+                <option value="business">Business</option>
+                <option value="empty">Empty Status</option>
+              </select>
+            </div>
+          </div>
+
+          <div id="accountsList" class="sidebar-accounts-list scrollable">
+            <!-- Accounts will be populated here -->
+          </div>
+
+          <div id="noAccounts" class="empty-state" style="display: none">
+            <div class="empty-icon">📁</div>
+            <p>No accounts</p>
+            <p class="hint">Click ➕ to add</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Payments Tab Content -->
+      <div id="paymentsContent" class="tab-content" style="display: none">
+        <!-- Payment Controls -->
+        <div class="quick-actions">
+          <button id="importCardsBtn" class="btn btn-primary btn-sm">
+            ➕ Import Cards
+          </button>
+          <button id="exportCardsBtn" class="btn btn-success btn-sm">
+            📤 Export Cards
+          </button>
+          <button id="findPaymentFieldsBtn" class="btn btn-secondary btn-sm">
+            🔍 Find Fields
+          </button>
+          <button id="clearCardsBtn" class="btn btn-danger btn-sm">
+            🗑️ Clear All
+          </button>
+        </div>
+
+        <!-- Payment Cards List -->
+        <div class="cards-section">
+          <div class="section-header">
+            <h3>Payment Cards</h3>
+            <span class="cards-count" id="cardsCount">(0)</span>
+          </div>
+
+          <!-- Card Filters -->
+          <div class="card-filters">
+            <div class="filter-row">
+              <input
+                type="text"
+                id="cardFilterInput"
+                placeholder="Filter cards by number, type, expiry..."
+                class="filter-input"
+              />
+              <select id="cardTypeFilter" class="filter-select">
+                <option value="">All Types</option>
+                <option value="visa">Visa</option>
+                <option value="mastercard">MasterCard</option>
+                <option value="american express">American Express</option>
+                <option value="discover">Discover</option>
+                <option value="unknown">Unknown</option>
+              </select>
+            </div>
+          </div>
+
+          <div id="cardsList" class="cards-list scrollable">
+            <!-- Cards will be populated here -->
+          </div>
+
+          <div id="noCards" class="empty-state" style="display: none">
+            <div class="empty-icon">💳</div>
+            <p>No payment cards imported</p>
+            <p class="hint">Click "Import Cards" to load card data</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- NEW: Bypass Testing Tab Content -->
+      <div id="bypassContent" class="tab-content" style="display: none">
+        <div class="bypass-section">
+          <div class="bypass-header">
+            <div class="bypass-title">
+              <span class="icon">🛡️</span>
+              Bypass Security Tester
+              <span
+                style="
+                  font-size: 11px;
+                  color: #ff9800;
+                  background: rgba(255, 152, 0, 0.1);
+                  padding: 2px 8px;
+                  border-radius: 4px;
+                  margin-left: 10px;
+                  vertical-align: middle;
+                "
+                >Under Development</span
+              >
+            </div>
+          </div>
+
+          <!-- Control Buttons -->
+          <div
+            style="
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              margin-bottom: 12px;
+            "
+          >
+            <button
+              id="bypassDetectUrl"
+              class="btn btn-primary btn-sm"
+              style="display: flex; align-items: center; gap: 6px"
+            >
+              <span>🎯</span> Detect URL
+            </button>
+            <button
+              id="bypassSettingsBtn"
+              class="btn btn-secondary btn-sm"
+              style="display: flex; align-items: center; gap: 6px"
+            >
+              <span>⚙️</span> Settings
+            </button>
+          </div>
+
+          <!-- Target Configuration -->
+          <div class="bypass-controls">
+            <div class="input-group">
+              <input
+                type="text"
+                id="bypassTargetUrl"
+                class="bypass-url-input"
+                placeholder="https://cursor.com/api/dashboard/delete-account"
+              />
+            </div>
+          </div>
+
+          <!-- Techniques Selection -->
+          <div class="section-header" style="margin-top: 16px">
+            <h3>Bypass Techniques</h3>
+            <button id="bypassSelectAll" class="btn btn-link btn-sm">
+              Select All
+            </button>
+          </div>
+
+          <div class="bypass-techniques scrollable">
+            <div class="technique-item">
+              <input
+                type="checkbox"
+                id="tech-param"
+                data-technique="parameter"
+                checked
+              />
+              <label for="tech-param" class="technique-label">
+                Parameter Injection
+              </label>
+              <span class="technique-count">15 tests</span>
+            </div>
+
+            <div class="technique-item">
+              <input
+                type="checkbox"
+                id="tech-header"
+                data-technique="header"
+                checked
+              />
+              <label for="tech-header" class="technique-label">
+                Header Manipulation
+              </label>
+              <span class="technique-count">15 tests</span>
+            </div>
+
+            <div class="technique-item">
+              <input
+                type="checkbox"
+                id="tech-method"
+                data-technique="method"
+                checked
+              />
+              <label for="tech-method" class="technique-label">
+                Method Override
+              </label>
+              <span class="technique-count">20 tests</span>
+            </div>
+
+            <div class="technique-item">
+              <input
+                type="checkbox"
+                id="tech-content"
+                data-technique="content"
+                checked
+              />
+              <label for="tech-content" class="technique-label">
+                Content-Type Bypass
+              </label>
+              <span class="technique-count">9 tests</span>
+            </div>
+
+            <div class="technique-item">
+              <input
+                type="checkbox"
+                id="tech-auth"
+                data-technique="auth"
+                checked
+              />
+              <label for="tech-auth" class="technique-label">
+                Authorization Bypass
+              </label>
+              <span class="technique-count">6 tests</span>
+            </div>
+
+            <div class="technique-item">
+              <input
+                type="checkbox"
+                id="tech-storage"
+                data-technique="storage"
+                checked
+              />
+              <label for="tech-storage" class="technique-label">
+                Storage Manipulation
+              </label>
+              <span class="technique-count">20 tests</span>
+            </div>
+
+            <div class="technique-item">
+              <input
+                type="checkbox"
+                id="tech-frontend"
+                data-technique="frontend"
+                checked
+              />
+              <label for="tech-frontend" class="technique-label">
+                Frontend Override
+              </label>
+              <span class="technique-count">5 tests</span>
+            </div>
+
+            <div class="technique-item">
+              <input
+                type="checkbox"
+                id="tech-race"
+                data-technique="race"
+                checked
+              />
+              <label for="tech-race" class="technique-label">
+                Race Condition
+              </label>
+              <span class="technique-count">10 tests</span>
+            </div>
+
+            <div class="technique-item">
+              <input
+                type="checkbox"
+                id="tech-encoding"
+                data-technique="encoding"
+                checked
+              />
+              <label for="tech-encoding" class="technique-label">
+                Encoding Bypass
+              </label>
+              <span class="technique-count">9 tests</span>
+            </div>
+
+            <div class="technique-item">
+              <input
+                type="checkbox"
+                id="tech-endpoint"
+                data-technique="endpoint"
+                checked
+              />
+              <label for="tech-endpoint" class="technique-label">
+                Alternative Endpoints
+              </label>
+              <span class="technique-count">7 tests</span>
+            </div>
+          </div>
+
+          <div
+            id="bypassTotalTests"
+            style="
+              text-align: center;
+              margin: 8px 0;
+              color: var(--text-secondary);
+              font-size: 12px;
+            "
+          >
+            116 tests selected
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="quick-actions" style="margin-top: 16px">
+            <button id="startBypassTest" class="btn btn-primary">
+              ▶️ Start Testing
+            </button>
+            <button id="stopBypassTest" class="btn btn-danger" disabled>
+              ⏹️ Stop
+            </button>
+            <button id="exportBypassResults" class="btn btn-secondary">
+              💾 Export Results
+            </button>
+          </div>
+
+          <!-- Progress Section -->
+          <div
+            id="bypassProgressSection"
+            class="bypass-progress"
+            style="display: none"
+          >
+            <div class="progress-bar">
+              <div
+                class="progress-fill"
+                id="bypassProgressFill"
+                style="width: 0%"
+              ></div>
+            </div>
+            <div class="progress-text" id="bypassProgressText">
+              Initializing...
+            </div>
+          </div>
+
+          <!-- Results Section -->
+          <div
+            id="bypassResultsSection"
+            class="bypass-results"
+            style="display: none"
+          >
+            <h3 style="margin-bottom: 12px">Test Results</h3>
+            <div class="results-summary">
+              <div class="result-stat success">
+                <div class="result-value" id="bypassSuccessCount">0</div>
+                <div class="result-label">Successful</div>
+              </div>
+              <div class="result-stat partial">
+                <div class="result-value" id="bypassPartialCount">0</div>
+                <div class="result-label">Partial</div>
+              </div>
+              <div class="result-stat failed">
+                <div class="result-value" id="bypassFailedCount">0</div>
+                <div class="result-label">Failed</div>
+              </div>
+            </div>
+            <div
+              id="bypassResultDetails"
+              class="result-details"
+              style="margin-top: 12px"
+            >
+              <!-- Detailed results will be populated here -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Loading Overlay -->
+      <div id="loadingOverlay" class="loading-overlay" style="display: none">
+        <div class="spinner"></div>
+        <p>Loading...</p>
+      </div>
+
+      <!-- Notification Toast -->
+      <div id="notification" class="notification" style="display: none">
+        <span id="notificationText"></span>
+      </div>
+    </div>
+
+    <!-- Account Item Template -->
+    <template id="sidebarAccountTemplate">
+      <div class="sidebar-account-item" data-account="">
+        <div class="account-info">
+          <div class="account-avatar">
+            <span class="account-icon">👤</span>
+            <div class="active-indicator">✓</div>
+          </div>
+          <div class="account-details">
+            <div class="account-email"></div>
+            <div class="account-meta">
+              <span class="account-status"></span>
+            </div>
+          </div>
+        </div>
+        <div class="account-actions">
+          <button class="reveal-btn" title="Show file in folder">📁</button>
+          <button class="delete-btn" title="Delete account">🗑️</button>
+        </div>
+      </div>
+    </template>
+
+    <!-- Card Item Template -->
+    <template id="sidebarCardTemplate">
+      <div class="card-item" data-card-id="">
+        <div class="card-checkbox">
+          <input type="checkbox" class="card-select" />
+        </div>
+        <div class="card-info">
+          <div class="card-icon">
+            <span class="card-type-icon">💳</span>
+          </div>
+          <div class="card-details">
+            <div class="card-number"></div>
+            <div class="card-meta">
+              <span class="card-expiry"></span>
+              <span class="card-type"></span>
+            </div>
+          </div>
+        </div>
+        <div class="card-actions">
+          <button class="fill-btn" title="Auto-fill this card">✨</button>
+          <button class="remove-card-btn" title="Remove card">🗑️</button>
+        </div>
+      </div>
+    </template>
+
+    <!-- Add Account Modal -->
+    <div id="addAccountModal" class="modal" style="display: none">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Add Account</h3>
+          <button class="modal-close" id="closeModal">✕</button>
+        </div>
+        <div class="modal-body">
+          <p>Paste your Cursor account cookies JSON here:</p>
+          <textarea
+            id="cookiesInput"
+            rows="6"
+            placeholder='[{"name": "SessionToken", "value": "...", ...}]'
+          ></textarea>
+          <div class="form-group">
+            <label for="accountNameInput">Account Name (optional):</label>
+            <input
+              type="text"
+              id="accountNameInput"
+              placeholder="Auto-generated if empty"
+            />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button id="confirmAddBtn" class="btn btn-primary">Add</button>
+          <button id="cancelAddBtn" class="btn btn-secondary">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Import Cards Modal -->
+    <div id="importCardsModal" class="modal" style="display: none">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Import Payment Cards</h3>
+          <button class="modal-close" id="closeCardsModal">✕</button>
+        </div>
+        <div class="modal-body">
+          <p>Paste your card data here (format: number|MM/YY|CVC):</p>
+          <textarea
+            id="cardsInput"
+            rows="6"
+            placeholder="5598880392588168|06/32|004
+5598880392572030|11/31|157
+..."
+          ></textarea>
+          <div class="form-group">
+            <label>
+              <input type="checkbox" id="replaceCardsCheck" />
+              Replace existing cards (otherwise merge)
+            </label>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button id="confirmImportCardsBtn" class="btn btn-primary">
+            Import Cards
+          </button>
+          <button id="cancelImportCardsBtn" class="btn btn-secondary">
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Hidden File Inputs -->
+    <input
+      type="file"
+      id="downloadsFileInput"
+      multiple
+      accept=".json"
+      style="display: none"
+    />
+    <input
+      type="file"
+      id="folderInput"
+      webkitdirectory
+      multiple
+      style="display: none"
+    />
+    <input
+      id="cardsFileInput"
+      type="file"
+      accept=".md,.txt,.json"
+      multiple
+      style="display: none"
+    />
+
+    <!-- Scripts -->
+    <script src="services/payment.js"></script>
+    <script src="services/account-deletion.js"></script>
+    <script src="../services/bypass-tester.js"></script>
+    <script src="sidepanel.js"></script>
+  </body>
+</html>

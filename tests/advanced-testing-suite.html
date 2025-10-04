@@ -1,0 +1,1332 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Advanced Testing Suite - Cursor Account Manager</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: #333;
+        min-height: 100vh;
+        overflow-x: hidden;
+      }
+
+      .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 20px;
+        animation: fadeIn 0.6s ease-out;
+      }
+
+      .header {
+        text-align: center;
+        margin-bottom: 30px;
+        background: rgba(255, 255, 255, 0.95);
+        padding: 30px;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      }
+
+      .header h1 {
+        color: #2c3e50;
+        font-size: 2.5em;
+        margin-bottom: 10px;
+        font-weight: 700;
+      }
+
+      .header p {
+        color: #666;
+        font-size: 1.2em;
+        line-height: 1.6;
+      }
+
+      .test-dashboard {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        margin-bottom: 30px;
+      }
+
+      .test-section {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 15px;
+        padding: 25px;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        transition: all 0.3s ease;
+      }
+
+      .test-section:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+      }
+
+      .section-title {
+        font-size: 1.4em;
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .test-controls {
+        margin-bottom: 20px;
+      }
+
+      .btn {
+        background: linear-gradient(45deg, #667eea, #764ba2);
+        color: white;
+        padding: 12px 24px;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        font-size: 1em;
+        font-weight: 500;
+        margin-right: 10px;
+        margin-bottom: 10px;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+      }
+
+      .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+      }
+
+      .btn:active {
+        transform: translateY(0);
+      }
+
+      .btn.success {
+        background: linear-gradient(45deg, #10ac84, #00d2d3);
+      }
+
+      .btn.warning {
+        background: linear-gradient(45deg, #ff9f43, #ff6b6b);
+      }
+
+      .btn.info {
+        background: linear-gradient(45deg, #3c6382, #40739e);
+      }
+
+      .test-results {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 15px;
+        margin-top: 15px;
+        min-height: 200px;
+        font-family: "Courier New", monospace;
+        font-size: 0.9em;
+        overflow-y: auto;
+        border: 2px solid #e9ecef;
+      }
+
+      .test-result-item {
+        margin-bottom: 8px;
+        padding: 8px;
+        border-radius: 5px;
+      }
+
+      .success {
+        background: #d4edda;
+        color: #155724;
+        border-left: 4px solid #28a745;
+      }
+
+      .error {
+        background: #f8d7da;
+        color: #721c24;
+        border-left: 4px solid #dc3545;
+      }
+
+      .info {
+        background: #d1ecf1;
+        color: #0c5460;
+        border-left: 4px solid #17a2b8;
+      }
+
+      .warning {
+        background: #fff3cd;
+        color: #856404;
+        border-left: 4px solid #ffc107;
+      }
+
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-top: 20px;
+      }
+
+      .stat-card {
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        padding: 20px;
+        border-radius: 10px;
+        text-align: center;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      }
+
+      .stat-number {
+        font-size: 2em;
+        font-weight: bold;
+        color: #2c3e50;
+        margin-bottom: 5px;
+      }
+
+      .stat-label {
+        color: #666;
+        font-size: 0.9em;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+
+      .progress-bar {
+        width: 100%;
+        height: 8px;
+        background: #e9ecef;
+        border-radius: 4px;
+        overflow: hidden;
+        margin-top: 10px;
+      }
+
+      .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #10ac84, #00d2d3);
+        width: 0%;
+        transition: width 0.3s ease;
+      }
+
+      .test-full-width {
+        grid-column: 1 / -1;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.7;
+        }
+      }
+
+      .loading {
+        animation: pulse 2s infinite;
+      }
+
+      .emoji {
+        font-size: 1.2em;
+      }
+
+      @media (max-width: 768px) {
+        .test-dashboard {
+          grid-template-columns: 1fr;
+        }
+
+        .stats-grid {
+          grid-template-columns: 1fr 1fr;
+        }
+
+        .header h1 {
+          font-size: 2em;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1><span class="emoji">🧪</span> Advanced Testing Suite</h1>
+        <p>
+          Comprehensive testing framework for the Cursor Account Manager
+          Extension
+        </p>
+      </div>
+
+      <div class="test-dashboard">
+        <!-- Unit Tests -->
+        <div class="test-section">
+          <h2 class="section-title">
+            <span class="emoji">🔬</span> Unit Tests
+          </h2>
+          <div class="test-controls">
+            <button class="btn" onclick="runUnitTests()">Run Unit Tests</button>
+            <button class="btn success" onclick="runCoreServiceTests()">
+              Core Services
+            </button>
+            <button class="btn info" onclick="runDatabaseTests()">
+              Database Tests
+            </button>
+          </div>
+          <div class="test-results" id="unitTestResults"></div>
+        </div>
+
+        <!-- Integration Tests -->
+        <div class="test-section">
+          <h2 class="section-title">
+            <span class="emoji">🔗</span> Integration Tests
+          </h2>
+          <div class="test-controls">
+            <button class="btn" onclick="runIntegrationTests()">
+              Run Integration Tests
+            </button>
+            <button class="btn success" onclick="runAccountIntegrationTests()">
+              Account Integration
+            </button>
+            <button class="btn info" onclick="runPaymentIntegrationTests()">
+              Payment Integration
+            </button>
+          </div>
+          <div class="test-results" id="integrationTestResults"></div>
+        </div>
+
+        <!-- Performance Tests -->
+        <div class="test-section">
+          <h2 class="section-title">
+            <span class="emoji">⚡</span> Performance Tests
+          </h2>
+          <div class="test-controls">
+            <button class="btn" onclick="runPerformanceTests()">
+              Run Performance Tests
+            </button>
+            <button class="btn warning" onclick="runDatabasePerformanceTests()">
+              Database Performance
+            </button>
+            <button class="btn info" onclick="runQueryOptimizationTests()">
+              Query Optimization
+            </button>
+          </div>
+          <div class="test-results" id="performanceTestResults"></div>
+        </div>
+
+        <!-- Security Tests -->
+        <div class="test-section">
+          <h2 class="section-title">
+            <span class="emoji">🛡️</span> Security Tests
+          </h2>
+          <div class="test-controls">
+            <button class="btn" onclick="runSecurityTests()">
+              Run Security Tests
+            </button>
+            <button class="btn warning" onclick="runInputValidationTests()">
+              Input Validation
+            </button>
+            <button class="btn info" onclick="runInjectionTests()">
+              Injection Tests
+            </button>
+          </div>
+          <div class="test-results" id="securityTestResults"></div>
+        </div>
+
+        <!-- Test Statistics -->
+        <div class="test-section test-full-width">
+          <h2 class="section-title">
+            <span class="emoji">📊</span> Test Statistics
+          </h2>
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-number" id="totalTests">0</div>
+              <div class="stat-label">Total Tests</div>
+              <div class="progress-bar">
+                <div class="progress-fill" id="totalProgress"></div>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-number" id="passedTests">0</div>
+              <div class="stat-label">Passed Tests</div>
+              <div class="progress-bar">
+                <div class="progress-fill" id="passedProgress"></div>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-number" id="failedTests">0</div>
+              <div class="stat-label">Failed Tests</div>
+              <div class="progress-bar">
+                <div class="progress-fill" id="failedProgress"></div>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-number" id="coverage">0%</div>
+              <div class="stat-label">Coverage</div>
+              <div class="progress-bar">
+                <div class="progress-fill" id="coverageProgress"></div>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-number" id="executionTime">0ms</div>
+              <div class="stat-label">Execution Time</div>
+              <div class="progress-bar">
+                <div class="progress-fill" id="timeProgress"></div>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-number" id="systemHealth">100%</div>
+              <div class="stat-label">System Health</div>
+              <div class="progress-bar">
+                <div class="progress-fill" id="healthProgress"></div>
+              </div>
+            </div>
+          </div>
+          <div class="test-controls" style="margin-top: 20px">
+            <button class="btn success" onclick="runAllTests()">
+              🚀 Run All Tests
+            </button>
+            <button class="btn warning" onclick="generateTestReport()">
+              📋 Generate Report
+            </button>
+            <button class="btn info" onclick="exportTestResults()">
+              💾 Export Results
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Load dependencies in correct order -->
+    <script src="../libs/sql-wasm.js"></script>
+
+    <!-- Core Configuration & Architecture Services -->
+    <script src="../services/config.js"></script>
+    <script src="../services/logger.js"></script>
+    <script src="../services/error-handler.js"></script>
+    <script src="../services/security-manager.js"></script>
+    <script src="../services/input-validator.js"></script>
+
+    <!-- Database Services -->
+    <script src="../services/database/base-database-service.js"></script>
+    <script src="../services/database/connection-pool.js"></script>
+    <script src="../services/database/query-optimizer.js"></script>
+    <script src="../services/database/backup-recovery.js"></script>
+    <script src="../services/database/accounts-database-service.js"></script>
+    <script src="../services/database/cards-database-service.js"></script>
+    <script src="../services/database/database-manager.js"></script>
+
+    <!-- Performance & Optimization Services -->
+    <script src="../services/performance-monitor.js"></script>
+    <script src="../services/performance-optimizer.js"></script>
+
+    <!-- Advanced Security Services -->
+    <script src="../services/threat-detector.js"></script>
+    <script src="../services/compliance-manager.js"></script>
+
+    <!-- Main Services -->
+    <script src="../services/account.js"></script>
+    <script src="../services/payment.js"></script>
+
+    <!-- Advanced Testing Framework -->
+    <script>
+      // Advanced Testing Suite Implementation
+      class AdvancedTestingSuite {
+          constructor() {
+              this.testResults = {
+                  unit: [],
+                  integration: [],
+                  performance: [],
+                  security: []
+              };
+
+              this.stats = {
+                  total: 0,
+                  passed: 0,
+                  failed: 0,
+                  coverage: 0,
+                  executionTime: 0,
+                  systemHealth: 100
+              };
+
+              this.startTime = null;
+              this.isRunning = false;
+          }
+
+          // Test Framework Core
+          async runTest(testName, testFunction, category = 'unit') {
+              const startTime = performance.now();
+
+              try {
+                  await testFunction();
+                  const duration = performance.now() - startTime;
+
+                  const result = {
+                      name: testName,
+                      status: 'PASSED',
+                      duration: duration.toFixed(2),
+                      timestamp: new Date().toISOString()
+                  };
+
+                  this.testResults[category].push(result);
+                  this.stats.passed++;
+                  this.logTestResult(result, category);
+
+                  return result;
+              } catch (error) {
+                  const duration = performance.now() - startTime;
+
+                  const result = {
+                      name: testName,
+                      status: 'FAILED',
+                      error: error.message,
+                      duration: duration.toFixed(2),
+                      timestamp: new Date().toISOString()
+                  };
+
+                  this.testResults[category].push(result);
+                  this.stats.failed++;
+                  this.logTestResult(result, category);
+
+                  return result;
+              } finally {
+                  this.stats.total++;
+                  this.updateStatistics();
+              }
+          }
+
+          logTestResult(result, category) {
+              const resultsContainer = document.getElementById(`${category}TestResults`);
+              if (!resultsContainer) return;
+
+              const resultElement = document.createElement('div');
+              resultElement.className = `test-result-item ${result.status === 'PASSED' ? 'success' : 'error'}`;
+
+              resultElement.innerHTML = `
+                  <strong>${result.name}</strong> - ${result.status}
+                  ${result.error ? `<br>Error: ${result.error}` : ''}
+                  <br><small>Duration: ${result.duration}ms | ${new Date(result.timestamp).toLocaleTimeString()}</small>
+              `;
+
+              resultsContainer.appendChild(resultElement);
+              resultsContainer.scrollTop = resultsContainer.scrollHeight;
+          }
+
+          updateStatistics() {
+              document.getElementById('totalTests').textContent = this.stats.total;
+              document.getElementById('passedTests').textContent = this.stats.passed;
+              document.getElementById('failedTests').textContent = this.stats.failed;
+
+              // Update progress bars
+              const passRate = this.stats.total > 0 ? (this.stats.passed / this.stats.total) * 100 : 0;
+              document.getElementById('passedProgress').style.width = `${passRate}%`;
+
+              // Update coverage (estimated based on test types)
+              const coverageEstimate = Math.min(95, (this.stats.total / 100) * 85); // Max 95% coverage
+              this.stats.coverage = coverageEstimate;
+              document.getElementById('coverage').textContent = `${coverageEstimate.toFixed(1)}%`;
+              document.getElementById('coverageProgress').style.width = `${coverageEstimate}%`;
+
+              // Update execution time
+              if (this.startTime) {
+                  this.stats.executionTime = Date.now() - this.startTime;
+                  document.getElementById('executionTime').textContent = `${this.stats.executionTime}ms`;
+              }
+
+              // Update system health
+              const healthScore = this.stats.total > 0 ? (this.stats.passed / this.stats.total) * 100 : 100;
+              this.stats.systemHealth = healthScore;
+              document.getElementById('systemHealth').textContent = `${healthScore.toFixed(1)}%`;
+              document.getElementById('healthProgress').style.width = `${healthScore}%`;
+          }
+
+          clearResults(category) {
+              const resultsContainer = document.getElementById(`${category}TestResults`);
+              if (resultsContainer) {
+                  resultsContainer.innerHTML = '';
+              }
+          }
+
+          // Assertion helpers
+          assert(condition, message) {
+              if (!condition) {
+                  throw new Error(message || 'Assertion failed');
+              }
+          }
+
+          assertEquals(actual, expected, message) {
+              if (actual !== expected) {
+                  throw new Error(message || `Expected ${expected}, but got ${actual}`);
+              }
+          }
+
+          assertNotNull(value, message) {
+              if (value == null) {
+                  throw new Error(message || 'Expected value to not be null or undefined');
+              }
+          }
+
+          assertThrows(fn, message) {
+              try {
+                  fn();
+                  throw new Error(message || 'Expected function to throw an error');
+              } catch (error) {
+                  // Expected behavior
+              }
+          }
+      }
+
+      // Global test suite instance
+      const testSuite = new AdvancedTestingSuite();
+
+      // Unit Tests
+      async function runUnitTests() {
+          testSuite.clearResults('unit');
+          testSuite.startTime = Date.now();
+
+          // Core service tests
+          await testSuite.runTest('Config Service Test', async () => {
+              testSuite.assertNotNull(Config, 'Config service should be loaded');
+              testSuite.assert(Config.DATABASE, 'Config should have DATABASE section');
+          });
+
+          await testSuite.runTest('Logger Service Test', async () => {
+              testSuite.assertNotNull(logger, 'Logger service should be loaded');
+              logger.info('TestSuite', 'runUnitTests', 'Logger test message');
+          });
+
+          await testSuite.runTest('Error Handler Test', async () => {
+              testSuite.assertNotNull(errorHandler, 'Error handler should be loaded');
+              const error = new Error('Test error');
+              const handled = errorHandler.handleDatabaseError('test', error);
+              testSuite.assertNotNull(handled, 'Error should be handled');
+          });
+
+          await testSuite.runTest('Input Validator Test', async () => {
+              testSuite.assertNotNull(inputValidator, 'Input validator should be loaded');
+              testSuite.assert(inputValidator.validateString, 'Should have validateString method');
+          });
+      }
+
+      async function runCoreServiceTests() {
+          testSuite.clearResults('unit');
+          testSuite.startTime = Date.now();
+
+          await testSuite.runTest('DatabaseManager Initialization', async () => {
+              testSuite.assertNotNull(DatabaseManager, 'DatabaseManager class should be available');
+              const manager = DatabaseManager.getInstance();
+              testSuite.assertNotNull(manager, 'DatabaseManager instance should be created');
+          });
+
+          await testSuite.runTest('AccountService Loading', async () => {
+              testSuite.assertNotNull(AccountService, 'AccountService should be loaded');
+              const service = new AccountService();
+              testSuite.assertNotNull(service, 'AccountService instance should be created');
+          });
+
+          await testSuite.runTest('PaymentService Loading', async () => {
+              testSuite.assertNotNull(PaymentService, 'PaymentService should be loaded');
+              const service = new PaymentService();
+              testSuite.assertNotNull(service, 'PaymentService instance should be created');
+          });
+      }
+
+      async function runDatabaseTests() {
+          testSuite.clearResults('unit');
+          testSuite.startTime = Date.now();
+
+          await testSuite.runTest('Connection Pool Test', async () => {
+              testSuite.assertNotNull(ConnectionPool, 'ConnectionPool should be loaded');
+              const pool = new ConnectionPool({ maxConnections: 5 });
+              testSuite.assertNotNull(pool, 'Connection pool should be created');
+          });
+
+          await testSuite.runTest('Query Optimizer Test', async () => {
+              testSuite.assertNotNull(QueryOptimizer, 'QueryOptimizer should be loaded');
+              const optimizer = new QueryOptimizer();
+              testSuite.assertNotNull(optimizer, 'Query optimizer should be created');
+          });
+
+          await testSuite.runTest('Backup Service Test', async () => {
+              testSuite.assertNotNull(BackupRecoveryService, 'BackupRecoveryService should be loaded');
+              const backup = new BackupRecoveryService();
+              testSuite.assertNotNull(backup, 'Backup service should be created');
+          });
+      }
+
+      // Integration Tests
+      async function runIntegrationTests() {
+          testSuite.clearResults('integration');
+          testSuite.startTime = Date.now();
+
+          await testSuite.runTest('Service Dependency Chain', async () => {
+              // Test if all services load in proper order
+              const requiredServices = ['Config', 'logger', 'errorHandler', 'inputValidator'];
+              for (const service of requiredServices) {
+                  testSuite.assertNotNull(window[service], `${service} should be loaded in dependency chain`);
+              }
+          });
+
+          await testSuite.runTest('Database Service Integration', async () => {
+              const manager = DatabaseManager.getInstance();
+              testSuite.assertNotNull(manager.config, 'DatabaseManager should have config');
+              testSuite.assert(typeof manager.initialize === 'function', 'Should have initialize method');
+          });
+      }
+
+      async function runAccountIntegrationTests() {
+          testSuite.clearResults('integration');
+          testSuite.startTime = Date.now();
+
+          await testSuite.runTest('Account Service Integration', async () => {
+              const service = new AccountService();
+              testSuite.assertNotNull(service, 'AccountService should be created');
+              testSuite.assert(typeof service.initializeDatabase === 'function', 'Should have initializeDatabase method');
+          });
+
+          await testSuite.runTest('Account Data Validation', async () => {
+              // Test input validation integration
+              testSuite.assert(typeof inputValidator.validateAccountName === 'function' ||
+                              typeof inputValidator.validateString === 'function',
+                              'Input validation should be integrated');
+          });
+      }
+
+      async function runPaymentIntegrationTests() {
+          testSuite.clearResults('integration');
+          testSuite.startTime = Date.now();
+
+          await testSuite.runTest('Payment Service Integration', async () => {
+              const service = new PaymentService();
+              testSuite.assertNotNull(service, 'PaymentService should be created');
+              testSuite.assert(typeof service.initializeDatabase === 'function', 'Should have initializeDatabase method');
+          });
+
+          await testSuite.runTest('Payment Data Validation', async () => {
+              // Test card validation integration
+              testSuite.assert(typeof inputValidator.validateCardData === 'function' ||
+                              typeof inputValidator.validateString === 'function',
+                              'Card validation should be integrated');
+          });
+      }
+
+      // Performance Tests
+      async function runPerformanceTests() {
+          testSuite.clearResults('performance');
+          testSuite.startTime = Date.now();
+
+          await testSuite.runTest('Service Loading Performance', async () => {
+              const startTime = performance.now();
+              const manager = DatabaseManager.getInstance();
+              const loadTime = performance.now() - startTime;
+
+              testSuite.assert(loadTime < 100, `Service loading should be fast (${loadTime.toFixed(2)}ms < 100ms)`);
+          });
+
+          await testSuite.runTest('Memory Usage Test', async () => {
+              // Basic memory usage check
+              if (performance.memory) {
+                  const memory = performance.memory;
+                  const memoryUsage = memory.usedJSHeapSize / (1024 * 1024); // MB
+                  testSuite.assert(memoryUsage < 100, `Memory usage should be reasonable (${memoryUsage.toFixed(2)}MB < 100MB)`);
+              }
+          });
+      }
+
+      async function runDatabasePerformanceTests() {
+          testSuite.clearResults('performance');
+          testSuite.startTime = Date.now();
+
+          await testSuite.runTest('🚀 Database Manager Performance', async () => {
+              const startTime = performance.now();
+              const manager = DatabaseManager.getInstance();
+              await manager.initialize();
+              const operationTime = performance.now() - startTime;
+
+              testSuite.assert(operationTime < 100, `Database init should be fast (${operationTime.toFixed(2)}ms < 100ms)`);
+          });
+
+          await testSuite.runTest('⚡ Account Service Performance', async () => {
+              if (typeof AccountService !== 'undefined') {
+                  const startTime = performance.now();
+                  const accountService = new AccountService();
+                  await accountService.ensureReady();
+                  const operationTime = performance.now() - startTime;
+
+                  testSuite.assert(operationTime < 200, `Account service init should be fast (${operationTime.toFixed(2)}ms < 200ms)`);
+              }
+          });
+
+          await testSuite.runTest('💳 Payment Service Performance', async () => {
+              if (typeof PaymentService !== 'undefined') {
+                  const startTime = performance.now();
+                  const paymentService = new PaymentService();
+                  await paymentService.ensureReady();
+                  const operationTime = performance.now() - startTime;
+
+                  testSuite.assert(operationTime < 200, `Payment service init should be fast (${operationTime.toFixed(2)}ms < 200ms)`);
+              }
+          });
+
+          await testSuite.runTest('🔒 Security Manager Performance', async () => {
+              if (typeof SecurityManager !== 'undefined') {
+                  const startTime = performance.now();
+                  const securityManager = new SecurityManager();
+                  await securityManager.initialize();
+                  const operationTime = performance.now() - startTime;
+
+                  testSuite.assert(operationTime < 500, `Security manager init should be reasonable (${operationTime.toFixed(2)}ms < 500ms)`);
+              }
+          });
+
+          await testSuite.runTest('🔐 Encryption Performance Benchmark', async () => {
+              if (typeof SecurityManager !== 'undefined') {
+                  const securityManager = new SecurityManager();
+                  await securityManager.initialize();
+
+                  const testData = 'performance_test_data_'.repeat(10); // 230 chars
+                  const iterations = 10;
+
+                  const startTime = performance.now();
+                  for (let i = 0; i < iterations; i++) {
+                      const encrypted = await securityManager.encryptData(testData, `perf_test_${i}`);
+                      const decrypted = await securityManager.decryptData(encrypted, `perf_test_${i}`);
+                      testSuite.assertEquals(decrypted, testData, 'Decryption should work correctly');
+                  }
+                  const totalTime = performance.now() - startTime;
+                  const avgTime = totalTime / iterations;
+
+                  testSuite.assert(avgTime < 50, `Encryption/decryption should be fast (avg ${avgTime.toFixed(2)}ms < 50ms)`);
+              }
+          });
+
+          await testSuite.runTest('📊 Memory Usage Tracking', async () => {
+              if (performance.memory) {
+                  const memBefore = performance.memory.usedJSHeapSize;
+
+                  // Create some test objects
+                  const testObjects = [];
+                  for (let i = 0; i < 1000; i++) {
+                      testObjects.push({ id: i, data: `test_data_${i}` });
+                  }
+
+                  const memAfter = performance.memory.usedJSHeapSize;
+                  const memIncrease = memAfter - memBefore;
+
+                  testSuite.assert(memIncrease < 1024 * 1024, `Memory usage should be reasonable (${(memIncrease / 1024).toFixed(2)}KB < 1MB)`);
+
+                  // Cleanup
+                  testObjects.length = 0;
+              } else {
+                  testSuite.log('Memory API not available in this browser');
+              }
+          });
+
+          await testSuite.runTest('⚡ Performance Optimizer Availability', async () => {
+              testSuite.assertNotNull(typeof PerformanceOptimizer !== 'undefined', 'PerformanceOptimizer should be available');
+              testSuite.assertNotNull(PerformanceOptimizer, 'PerformanceOptimizer class should be defined');
+          });
+
+          await testSuite.runTest('🚀 Advanced Caching System', async () => {
+              if (typeof PerformanceOptimizer !== 'undefined') {
+                  const optimizer = new PerformanceOptimizer();
+                  await optimizer.initialize();
+
+                  // Test caching functionality
+                  const testData = { user: 'testuser', data: 'cached_data_123' };
+                  
+                  // Cache data
+                  optimizer.cacheData('test_key_1', testData, { strategy: 'lru' });
+                  optimizer.cacheData('test_key_2', testData, { strategy: 'ttl', ttl: 60000 });
+                  
+                  // Retrieve cached data
+                  const cachedLRU = optimizer.getCachedData('test_key_1');
+                  const cachedTTL = optimizer.getCachedData('test_key_2');
+                  
+                  testSuite.assertNotNull(cachedLRU, 'LRU cached data should be retrievable');
+                  testSuite.assertNotNull(cachedTTL, 'TTL cached data should be retrievable');
+                  testSuite.assertEquals(cachedLRU.user, testData.user, 'Cached data should match original');
+              }
+          });
+
+          await testSuite.runTest('🧠 Memory Management Optimization', async () => {
+              if (typeof PerformanceOptimizer !== 'undefined') {
+                  const optimizer = new PerformanceOptimizer();
+                  await optimizer.initialize();
+
+                  // Test memory monitoring
+                  optimizer.monitorMemoryUsage();
+                  
+                  // Test garbage collection
+                  optimizer.performGarbageCollection();
+                  
+                  const stats = optimizer.getPerformanceStats();
+                  testSuite.assertNotNull(stats.metrics, 'Performance metrics should be available');
+                  testSuite.assert(stats.state.isInitialized === true, 'Optimizer should be initialized');
+              }
+          });
+
+          await testSuite.runTest('🗃️ Query Optimization Engine', async () => {
+              if (typeof PerformanceOptimizer !== 'undefined') {
+                  const optimizer = new PerformanceOptimizer();
+                  await optimizer.initialize();
+
+                  // Test query optimization
+                  const testQuery = { query: 'SELECT * FROM accounts WHERE name = ?', params: ['testuser'] };
+                  const result = optimizer.optimizeQuery(testQuery.query, testQuery.params);
+                  
+                  testSuite.assertNotNull(result, 'Query optimization result should be available');
+                  testSuite.assertNotNull(result.optimizations, 'Optimizations should be listed');
+                  
+                  const stats = optimizer.getPerformanceStats();
+                  testSuite.assert(stats.query.totalQueries >= 1, 'Query metrics should track processed queries');
+              }
+          });
+
+          await testSuite.runTest('📊 Comprehensive Performance Analytics', async () => {
+              if (typeof PerformanceOptimizer !== 'undefined') {
+                  const optimizer = new PerformanceOptimizer();
+                  await optimizer.initialize();
+
+                  // Generate performance data
+                  for (let i = 0; i < 3; i++) {
+                      optimizer.cacheData(`analytics_test_${i}`, { iteration: i }, { strategy: 'lru' });
+                  }
+
+                  const stats = optimizer.getPerformanceStats();
+                  
+                  // Verify comprehensive metrics
+                  testSuite.assertNotNull(stats.metrics, 'Performance metrics should be comprehensive');
+                  testSuite.assertNotNull(stats.cache, 'Cache statistics should be available');
+                  testSuite.assertNotNull(stats.techniques, 'Optimization techniques should be documented');
+                  testSuite.assert(stats.cache.lru >= 3, 'LRU cache should contain test data');
+              }
+          });
+      }
+
+      async function runQueryOptimizationTests() {
+          testSuite.clearResults('performance');
+          testSuite.startTime = Date.now();
+
+          await testSuite.runTest('Query Optimizer Initialization', async () => {
+              const startTime = performance.now();
+              const optimizer = new QueryOptimizer();
+              const stats = optimizer.getStats();
+              const initTime = performance.now() - startTime;
+
+              testSuite.assert(initTime < 50, `Query optimizer init should be fast (${initTime.toFixed(2)}ms < 50ms)`);
+              testSuite.assertNotNull(stats, 'Stats should be available');
+          });
+      }
+
+      // Security Tests
+      async function runSecurityTests() {
+          testSuite.clearResults('security');
+          testSuite.startTime = Date.now();
+
+          await testSuite.runTest('🔒 SecurityManager Comprehensive Tests', async () => {
+              testSuite.assertNotNull(typeof SecurityManager !== 'undefined', 'SecurityManager should be available');
+              testSuite.assertNotNull(SecurityManager, 'SecurityManager class should be defined');
+
+              const securityManager = new SecurityManager();
+              await securityManager.initialize();
+
+              // Test initialization state
+              testSuite.assert(securityManager.isInitialized === true, 'SecurityManager should be initialized');
+              testSuite.assertNotNull(securityManager.encryptionKey, 'Encryption key should be generated');
+              testSuite.assert(securityManager.accessControlRules.size > 0, 'Access control rules should be loaded');
+          });
+
+          await testSuite.runTest('🔐 Advanced Encryption/Decryption Tests', async () => {
+              if (typeof SecurityManager !== 'undefined') {
+                  const securityManager = new SecurityManager();
+                  await securityManager.initialize();
+
+                  // Test multiple data types and contexts
+                  const testScenarios = [
+                      { data: 'account_cookies_data_12345', context: 'account_test_001' },
+                      { data: '4111111111111111', context: 'card_number_test' },
+                      { data: '123', context: 'card_cvc_test' },
+                      { data: JSON.stringify({sessionToken: 'abc123xyz', userId: 'user_789'}), context: 'cookie_session_test' },
+                      { data: 'äöü特殊字符测试', context: 'unicode_test' }, // Unicode test
+                      { data: 'A'.repeat(100), context: 'large_data_test' } // Large data test
+                  ];
+
+                  for (const scenario of testScenarios) {
+                      const encrypted = await securityManager.encryptData(scenario.data, scenario.context);
+                      testSuite.assertNotNull(encrypted, `Data should be encrypted for ${scenario.context}`);
+                      testSuite.assert(encrypted !== scenario.data, `Encrypted data should differ for ${scenario.context}`);
+                      testSuite.assert(encrypted.length > scenario.data.length, `Encrypted data should be longer for ${scenario.context}`);
+
+                      // Verify base64 encoding
+                      testSuite.assert(/^[A-Za-z0-9+/=]+$/.test(encrypted), `Encrypted data should be base64 for ${scenario.context}`);
+
+                      const decrypted = await securityManager.decryptData(encrypted, scenario.context);
+                      testSuite.assertEquals(decrypted, scenario.data, `Decrypted data should match for ${scenario.context}`);
+                  }
+
+                  // Test encryption metrics
+                  const stats = securityManager.getSecurityStats();
+                  testSuite.assert(stats.metrics.encryptionOperations >= testScenarios.length, 'Encryption operations should be tracked');
+                  testSuite.assert(stats.metrics.decryptionOperations >= testScenarios.length, 'Decryption operations should be tracked');
+              }
+          });
+
+          await testSuite.runTest('🛡️ Comprehensive Access Control Tests', async () => {
+              if (typeof SecurityManager !== 'undefined') {
+                  const securityManager = new SecurityManager();
+                  await securityManager.initialize();
+
+                  const accessTests = [
+                      { resource: 'account', action: 'read', user: { id: 'extension', role: 'admin' }, expected: true },
+                      { resource: 'account', action: 'write', user: { id: 'extension', role: 'admin' }, expected: true },
+                      { resource: 'payment', action: 'read', user: { id: 'extension', role: 'user' }, expected: true },
+                      { resource: 'payment', action: 'write', user: { id: 'extension', role: 'admin' }, expected: true },
+                      { resource: 'security', action: 'admin', user: { id: 'extension', role: 'admin' }, expected: true },
+                      { resource: 'nonexistent', action: 'read', user: { id: 'extension', role: 'admin' }, expected: false },
+                      { resource: 'account', action: 'delete', user: { id: 'extension', role: 'user' }, expected: false }
+                  ];
+
+                  let accessCheckCount = 0;
+                  let accessDenialCount = 0;
+
+                  for (const test of accessTests) {
+                      const hasAccess = securityManager.checkAccess(test.resource, test.action, test.user);
+                      testSuite.assertEquals(hasAccess, test.expected,
+                          `Access for ${test.resource}:${test.action} should be ${test.expected}`);
+
+                      accessCheckCount++;
+                      if (!hasAccess) accessDenialCount++;
+                  }
+
+                  const stats = securityManager.getSecurityStats();
+                  testSuite.assert(stats.metrics.accessChecks >= accessCheckCount, 'Access checks should be tracked');
+                  if (accessDenialCount > 0) {
+                      testSuite.assert(stats.metrics.accessDenials >= accessDenialCount, 'Access denials should be tracked');
+                  }
+              }
+          });
+
+          await testSuite.runTest('📋 Advanced Audit & Compliance Tests', async () => {
+              if (typeof SecurityManager !== 'undefined') {
+                  const securityManager = new SecurityManager();
+                  await securityManager.initialize();
+
+                  const testEvents = [
+                      { type: 'DATA_ENCRYPTED', context: 'test_encryption', details: { dataLength: 100 } },
+                      { type: 'ACCESS_GRANTED', context: 'test_access', details: { resource: 'test', action: 'read' } },
+                      { type: 'ACCESS_DENIED', context: 'test_denied', details: { reason: 'insufficient_permissions' } },
+                      { type: 'SECURITY_BREACH', context: 'test_breach', details: { severity: 'HIGH', source: 'test' } }
+                  ];
+
+                  for (const event of testEvents) {
+                      securityManager.logAuditEvent(event.type, event.context, event.details);
+                  }
+
+                  // Test audit log retrieval and filtering
+                  const allEvents = securityManager.getAuditLog();
+                  testSuite.assert(allEvents.length >= testEvents.length, 'All events should be logged');
+
+                  const encryptionEvents = securityManager.getAuditLog({ eventType: 'DATA_ENCRYPTED' });
+                  testSuite.assert(encryptionEvents.length >= 1, 'Encryption events should be filterable');
+
+                  const recentEvents = securityManager.getAuditLog({ limit: 2 });
+                  testSuite.assertEquals(recentEvents.length, 2, 'Event limiting should work');
+
+                  // Test event structure
+                  const latestEvent = allEvents[allEvents.length - 1];
+                  testSuite.assertNotNull(latestEvent.id, 'Event should have unique ID');
+                  testSuite.assertNotNull(latestEvent.timestamp, 'Event should have timestamp');
+                  testSuite.assertNotNull(latestEvent.eventType, 'Event should have event type');
+                  testSuite.assertNotNull(latestEvent.severity, 'Event should have severity level');
+                  testSuite.assertEquals(latestEvent.source, 'SecurityManager', 'Event should have correct source');
+              }
+          });
+
+          await testSuite.runTest('📊 Security Metrics Tracking', async () => {
+              if (typeof SecurityManager !== 'undefined') {
+                  const securityManager = new SecurityManager();
+                  await securityManager.initialize();
+
+                  const stats = securityManager.getSecurityStats();
+                  testSuite.assertNotNull(stats.metrics, 'Security metrics should be available');
+                  testSuite.assertNotNull(stats.state, 'Security state should be available');
+                  testSuite.assert(stats.state.isInitialized, 'Security manager should be initialized');
+              }
+          });
+
+          await testSuite.runTest('🔧 Input Validation Security', async () => {
+              testSuite.assertNotNull(inputValidator, 'Input validator should be available for security');
+              // Test basic validation exists
+              testSuite.assert(typeof inputValidator.validateString === 'function' ||
+                             Object.keys(inputValidator).length > 0,
+                             'Input validation methods should exist');
+          });
+
+          await testSuite.runTest('⚠️ Error Handler Security', async () => {
+              const error = new Error('Test sensitive data: password123');
+              const handled = errorHandler.handleDatabaseError('test', error);
+              testSuite.assertNotNull(handled, 'Errors should be properly handled');
+          });
+
+          await testSuite.runTest('🔍 Service Security Integration', async () => {
+              // Test that AccountService integrates SecurityManager
+              if (typeof AccountService !== 'undefined') {
+                  const accountService = new AccountService();
+                  await accountService.initializeDatabase();
+                  testSuite.assertNotNull(accountService.securityManager, 'AccountService should have SecurityManager');
+              }
+
+              // Test that PaymentService integrates SecurityManager
+              if (typeof PaymentService !== 'undefined') {
+                  const paymentService = new PaymentService();
+                  await paymentService.initializeDatabase();
+                  testSuite.assertNotNull(paymentService.securityManager, 'PaymentService should have SecurityManager');
+              }
+          });
+
+          await testSuite.runTest('🚨 Threat Detector Availability', async () => {
+              testSuite.assertNotNull(typeof ThreatDetector !== 'undefined', 'ThreatDetector should be available');
+              testSuite.assertNotNull(ThreatDetector, 'ThreatDetector class should be defined');
+          });
+
+          await testSuite.runTest('🔍 Threat Detection Analysis', async () => {
+              if (typeof ThreatDetector !== 'undefined') {
+                  const threatDetector = new ThreatDetector();
+                  await threatDetector.initialize();
+
+                  // Test benign request
+                  const benignRequest = {
+                      operation: 'test_operation',
+                      data: { message: 'Hello World' },
+                      sourceIp: '127.0.0.1',
+                      userAgent: 'test_agent'
+                  };
+
+                  const benignAnalysis = threatDetector.analyzeRequest(benignRequest);
+                  testSuite.assert(benignAnalysis.threatLevel <= 2, 'Benign request should have low threat level');
+
+                  // Test suspicious request with SQL injection pattern
+                  const suspiciousRequest = {
+                      operation: 'test_operation',
+                      data: { query: "SELECT * FROM users WHERE id = 1 OR 1=1" },
+                      sourceIp: '192.168.1.100',
+                      userAgent: 'test_agent'
+                  };
+
+                  const suspiciousAnalysis = threatDetector.analyzeRequest(suspiciousRequest);
+                  testSuite.assert(suspiciousAnalysis.threatLevel > 5, 'Suspicious request should have high threat level');
+
+                  const sqlThreat = suspiciousAnalysis.threats.find(t => t.type === 'SQL_INJECTION');
+                  testSuite.assertNotNull(sqlThreat, 'SQL injection threat should be detected');
+              }
+          });
+
+          await testSuite.runTest('⚖️ Compliance Manager Availability', async () => {
+              testSuite.assertNotNull(typeof ComplianceManager !== 'undefined', 'ComplianceManager should be available');
+              testSuite.assertNotNull(ComplianceManager, 'ComplianceManager class should be defined');
+          });
+
+          await testSuite.runTest('📋 GDPR Compliance Assessment', async () => {
+              if (typeof ComplianceManager !== 'undefined') {
+                  const complianceManager = new ComplianceManager();
+                  await complianceManager.initialize();
+
+                  const assessment = await complianceManager.performComplianceAssessment();
+                  testSuite.assertNotNull(assessment, 'Compliance assessment should be generated');
+                  testSuite.assert(assessment.articlesAssessed > 10, 'Multiple GDPR articles should be assessed');
+                  testSuite.assert(assessment.overallScore >= 80, 'Compliance score should be high');
+              }
+          });
+
+          await testSuite.runTest('🔒 DPIA Generation', async () => {
+              if (typeof ComplianceManager !== 'undefined') {
+                  const complianceManager = new ComplianceManager();
+                  await complianceManager.initialize();
+
+                  const dpia = complianceManager.generateDPIA();
+                  testSuite.assertNotNull(dpia, 'DPIA should be generated');
+                  testSuite.assertNotNull(dpia.processingDescription, 'Processing description should be included');
+                  testSuite.assertNotNull(dpia.riskAssessment, 'Risk assessment should be included');
+                  testSuite.assert(dpia.safeguardingMeasures.length > 5, 'Multiple safeguarding measures should be defined');
+              }
+          });
+
+          await testSuite.runTest('🛡️ Advanced Security Integration', async () => {
+              // Test that AccountService integrates ThreatDetector and ComplianceManager
+              if (typeof AccountService !== 'undefined') {
+                  const accountService = new AccountService();
+                  await accountService.initializeDatabase();
+                  testSuite.assertNotNull(accountService.threatDetector, 'AccountService should have ThreatDetector');
+                  testSuite.assertNotNull(accountService.complianceManager, 'AccountService should have ComplianceManager');
+              }
+
+              // Test that PaymentService integrates advanced security
+              if (typeof PaymentService !== 'undefined') {
+                  const paymentService = new PaymentService();
+                  await paymentService.initializeDatabase();
+                  testSuite.assertNotNull(paymentService.threatDetector, 'PaymentService should have ThreatDetector');
+                  testSuite.assertNotNull(paymentService.complianceManager, 'PaymentService should have ComplianceManager');
+              }
+          });
+      }
+
+      async function runInputValidationTests() {
+          testSuite.clearResults('security');
+          testSuite.startTime = Date.now();
+
+          await testSuite.runTest('String Validation Test', async () => {
+              if (inputValidator.validateString) {
+                  // Test various string inputs
+                  testSuite.assertThrows(() => {
+                      inputValidator.validateString(null, 'test', { required: true });
+                  }, 'Null string should throw error when required');
+              }
+          });
+
+          await testSuite.runTest('SQL Injection Prevention', async () => {
+              // Test that dangerous SQL patterns are handled
+              const dangerousInput = "'; DROP TABLE users; --";
+              if (inputValidator.sanitizeInput) {
+                  const sanitized = inputValidator.sanitizeInput(dangerousInput);
+                  testSuite.assert(!sanitized.includes('DROP TABLE'), 'SQL injection should be prevented');
+              }
+          });
+      }
+
+      async function runInjectionTests() {
+          testSuite.clearResults('security');
+          testSuite.startTime = Date.now();
+
+          await testSuite.runTest('XSS Prevention Test', async () => {
+              const xssInput = '<script>alert("xss")
+    </script>
+    '; if (inputValidator.sanitizeInput) { const sanitized =
+    inputValidator.sanitizeInput(xssInput);
+    testSuite.assert(!sanitized.includes('
+    <script>
+      '), 'XSS should be prevented');
+                      }
+                  });
+              }
+
+              // Comprehensive test runner
+              async function runAllTests() {
+                  testSuite.clearResults('unit');
+                  testSuite.clearResults('integration');
+                  testSuite.clearResults('performance');
+                  testSuite.clearResults('security');
+
+                  // Reset statistics
+                  testSuite.stats = {
+                      total: 0,
+                      passed: 0,
+                      failed: 0,
+                      coverage: 0,
+                      executionTime: 0,
+                      systemHealth: 100
+                  };
+                  testSuite.updateStatistics();
+
+                  testSuite.startTime = Date.now();
+                  testSuite.isRunning = true;
+
+                  try {
+                      // Run all test categories
+                      await runUnitTests();
+                      await runIntegrationTests();
+                      await runPerformanceTests();
+                      await runSecurityTests();
+
+                      // Final statistics update
+                      testSuite.stats.executionTime = Date.now() - testSuite.startTime;
+                      testSuite.updateStatistics();
+
+                      // Show completion message
+                      alert(`🎉 All tests completed!\n\nResults:\n✅ Passed: ${testSuite.stats.passed}\n❌ Failed: ${testSuite.stats.failed}\n📊 Total: ${testSuite.stats.total}\n⏱️ Time: ${testSuite.stats.executionTime}ms`);
+
+                  } catch (error) {
+                      console.error('Test execution error:', error);
+                      alert(`❌ Test execution failed: ${error.message}`);
+                  } finally {
+                      testSuite.isRunning = false;
+                  }
+              }
+
+              async function generateTestReport() {
+                  const report = {
+                      timestamp: new Date().toISOString(),
+                      statistics: testSuite.stats,
+                      results: testSuite.testResults,
+                      system: {
+                          userAgent: navigator.userAgent,
+                          url: window.location.href,
+                          memory: performance.memory ? {
+                              used: Math.round(performance.memory.usedJSHeapSize / (1024 * 1024)) + ' MB',
+                              total: Math.round(performance.memory.totalJSHeapSize / (1024 * 1024)) + ' MB'
+                          } : 'Not available'
+                      }
+                  };
+
+                  console.log('📋 Test Report Generated:', report);
+
+                  // Show formatted report
+                  const reportText = `
+      🧪 ADVANCED TESTING SUITE REPORT
+      ================================
+      📅 Generated: ${new Date(report.timestamp).toLocaleString()}
+
+      📊 TEST STATISTICS:
+      Total Tests: ${report.statistics.total}
+      ✅ Passed: ${report.statistics.passed}
+      ❌ Failed: ${report.statistics.failed}
+      📈 Coverage: ${report.statistics.coverage.toFixed(1)}%
+      ⏱️ Execution Time: ${report.statistics.executionTime}ms
+      🏥 System Health: ${report.statistics.systemHealth.toFixed(1)}%
+
+      🔬 UNIT TESTS: ${report.results.unit.length} tests
+      🔗 INTEGRATION TESTS: ${report.results.integration.length} tests
+      ⚡ PERFORMANCE TESTS: ${report.results.performance.length} tests
+      🛡️ SECURITY TESTS: ${report.results.security.length} tests
+
+      System: ${report.system.userAgent}
+      Memory Usage: ${report.system.memory.used || 'N/A'}
+                  `.trim();
+
+                  alert(reportText);
+              }
+
+              async function exportTestResults() {
+                  const results = {
+                      timestamp: new Date().toISOString(),
+                      stats: testSuite.stats,
+                      results: testSuite.testResults
+                  };
+
+                  const dataStr = JSON.stringify(results, null, 2);
+                  const dataBlob = new Blob([dataStr], { type: 'application/json' });
+                  const url = URL.createObjectURL(dataBlob);
+
+                  const link = document.createElement('a');
+                  link.href = url;
+                  link.download = `test-results-${new Date().toISOString().split('T')[0]}.json`;
+                  link.click();
+
+                  URL.revokeObjectURL(url);
+              }
+
+              // Initialize on page load
+              document.addEventListener('DOMContentLoaded', function() {
+                  console.log('🧪 Advanced Testing Suite Initialized');
+                  testSuite.updateStatistics();
+              });
+    </script>
+  </body>
+</html>

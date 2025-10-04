@@ -1,0 +1,10 @@
+{
+  "name": "com.cursor.manager",
+  "description": "Native messaging host for Cursor Manager Extension",
+  "path": "REPLACE_WITH_PYTHON_PATH",
+  "type": "stdio",
+  "allowed_origins": [
+    "chrome-extension://YOUR_EXTENSION_ID_HERE/"
+  ]
+}
+

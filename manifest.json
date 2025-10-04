@@ -1,0 +1,65 @@
+{
+  "manifest_version": 3,
+  "name": "Cursor Account Manager",
+  "version": "4.0.0",
+  "description": "Manage multiple Cursor accounts and switch between them easily",
+  "permissions": [
+    "cookies",
+    "storage",
+    "tabs",
+    "scripting",
+    "activeTab",
+    "downloads",
+    "sidePanel",
+    "webRequest",
+    "alarms",
+    "nativeMessaging"
+  ],
+  "host_permissions": ["<all_urls>"],
+  "incognito": "split",
+  "action": {
+    "default_icon": {
+      "16": "icons/icon64.png",
+      "48": "icons/icon64.png",
+      "128": "icons/icon64.png"
+    }
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "side_panel": {
+    "default_path": "sidepanel.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://*.cursor.com/*", "https://cursor.com/*"],
+      "js": ["content.js"],
+      "css": ["content.css"],
+      "run_at": "document_end",
+      "all_frames": true
+    },
+    {
+      "matches": ["<all_urls>"],
+      "js": ["auto-fill.js"],
+      "run_at": "document_end",
+      "all_frames": true
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "services/console-service.js",
+        "services/generator.js",
+        "stripe.js",
+        "auto-fill.js",
+        "modules/bypass/bypass_working.js",
+        "modules/bypass/bypass_invoice.js",
+        "modules/bypass/bypass_delete_auto.js"
+      ],
+      "matches": ["<all_urls>"]
+    }
+  ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
+  }
+}
