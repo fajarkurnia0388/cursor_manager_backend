@@ -36,14 +36,20 @@ Native messaging backend untuk Cursor Manager Chrome Extension.
 ## Features
 
 - **SQLite Database** - Persistent storage untuk accounts dan payment cards
+- **Tagging Support** - Tambahkan label fleksibel untuk setiap akun dan kartu guna mempermudah pengelompokan.
 - **Native Messaging** - Komunikasi dengan Chrome extension via JSON-RPC 2.0
 - **CLI Tool** - Command line interface untuk manage data
 - **Desktop GUI** - Graphical user interface untuk desktop management
-- **Zero Dependencies** - Hanya menggunakan Python standard library
+- **CustomTkinter UI** - Modern dark-theme interface powered by `customtkinter`
+- **Automation Scheduler** - Job terjadwal (refresh status, cleanup bypass, pruning events) berbasis APScheduler
+- **Realtime Event Log** - setiap perubahan akun/kartu tercatat di tabel `sync_events` dan tersedia lewat endpoint `events.*`
+- **Persisted Settings** - preferensi tema & konfigurasi scheduler disimpan di `~/.cursor_manager/settings.json`
 
 ## Requirements
 
 - Python 3.8 atau lebih tinggi
+- `customtkinter`
+- `apscheduler`
 - Chrome browser dengan Cursor Manager extension
 
 ## Installation
@@ -75,15 +81,11 @@ python gui.py
 
 **Features:**
 
-- 📊 View all accounts dan payment cards
-- ➕ Add new accounts/cards
-- ✏️ Edit existing data
-- 🗑️ Delete data
-- 🔍 Search functionality
-- 📥 Import dari JSON
-- 📤 Export ke JSON
-- 📈 Statistics dashboard
-- 💾 Backup/restore
+- Dashboard menampilkan statistik akun, kartu, bypass test, dan pro-trial
+- Manajemen akun lengkap (tambah, edit, hapus, pencarian, impor & ekspor)
+- Penyimpanan kartu pembayaran dengan generator kartu terintegrasi
+- Automation suite: quick generator, bypass test viewer dengan histori & export, serta pro-trial manager
+- Panel maintenance untuk backup, restore, health check, dan akses folder data
 
 ### CLI Commands
 
@@ -162,7 +164,7 @@ backend/
 ├── native_host.py           # Native messaging host
 ├── cli.py                   # Command line interface
 ├── install.py               # Installer script
-├── requirements.txt         # Dependencies (empty)
+├── requirements.txt         # Dependencies
 └── README.md               # This file
 ```
 
@@ -171,6 +173,7 @@ backend/
 - **Database:** `~/cursor_manager/data.db`
 - **Backups:** `~/cursor_manager/backups/`
 - **Logs:** `~/cursor_manager/logs/`
+- **Settings:** `~/cursor_manager/settings.json`
 
 ## API Reference
 

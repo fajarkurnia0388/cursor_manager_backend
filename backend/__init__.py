@@ -16,7 +16,7 @@ VERSION_PATCH = 0
 VERSION_INFO = (VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH)
 
 # Database schema version (must match database.py)
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
 
 
 def get_version():

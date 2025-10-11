@@ -132,7 +132,7 @@ class TestNativeMessagingIntegration(unittest.TestCase):
             "jsonrpc": "2.0",
             "id": 5,
             "method": "accounts.update",
-            "params": {"id": account_id, "status": "inactive"},
+            "params": {"id": account_id, "status": "limit pro"},
         }
 
         update_response = self.host.handle_request(update_request)
@@ -140,7 +140,7 @@ class TestNativeMessagingIntegration(unittest.TestCase):
 
         # Verify update
         get_response2 = self.host.handle_request(get_request)
-        self.assertEqual(get_response2["result"]["status"], "inactive")
+        self.assertEqual(get_response2["result"]["status"], "limit pro")
 
         # Delete account
         delete_request = {

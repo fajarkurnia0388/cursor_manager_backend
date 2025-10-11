@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SQLite-Only Test</title>
+    <style>
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+        background: #f5f5f5;
+      }
+      .container {
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+      }
+      .header {
+        text-align: center;
+        color: #333;
+        margin-bottom: 30px;
+      }
+      .test-section {
+        margin-bottom: 20px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        padding: 15px;
+      }
+      .test-section h3 {
+        margin-top: 0;
+        color: #007cba;
+        border-bottom: 2px solid #007cba;
+        padding-bottom: 5px;
+      }
+      .btn {
+        background: #007cba;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 4px;
+        cursor: pointer;
+        margin: 5px;
+        font-size: 14px;
+      }
+      .btn:hover {
+        background: #005a87;
+      }
+      .btn.success {
+        background: #28a745;
+      }
+      .btn.danger {
+        background: #dc3545;
+      }
+      .status {
+        padding: 10px;
+        margin: 10px 0;
+        border-radius: 4px;
+        font-weight: bold;
+      }
+      .status.success {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+      }
+      .status.error {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+      }
+      .status.info {
+        background: #d1ecf1;
+        color: #0c5460;
+        border: 1px solid #bee5eb;
+      }
+      .log {
+        background: #f8f9fa;
+        border: 1px solid #e9ecef;
+        border-radius: 4px;
+        padding: 10px;
+        font-family: "Courier New", monospace;
+        font-size: 12px;
+        max-height: 200px;
+        overflow-y: auto;
+        white-space: pre-wrap;
+      }
+      .stats {
+        display: flex;
+        justify-content: space-around;
+        margin: 15px 0;
+      }
+      .stat-card {
+        background: #f8f9fa;
+        border-radius: 6px;
+        padding: 15px;
+        text-align: center;
+        border-left: 4px solid #007cba;
+        min-width: 120px;
+      }
+      .stat-number {
+        font-size: 24px;
+        font-weight: bold;
+        color: #007cba;
+      }
+      .stat-label {
+        font-size: 12px;
+        color: #6c757d;
+        text-transform: uppercase;
+        margin-top: 5px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>🗄️ SQLite-Only Test</h1>
+        <p>Testing the new SQLite-only architecture</p>
+      </div>
+
+      <div id="status" class="status info">
+        Ready to test SQLite-only functionality
+      </div>
+
+      <div class="stats">
+        <div class="stat-card">
+          <div class="stat-number" id="accounts-count">0</div>
+          <div class="stat-label">Accounts</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="cards-count">0</div>
+          <div class="stat-label">Cards</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="init-time">0ms</div>
+          <div class="stat-label">Init Time</div>
+        </div>
+      </div>
+
+      <!-- Account Operations -->
+      <div class="test-section">
+        <h3>👥 Account Operations</h3>
+        <button id="test-account-create" class="btn success">
+          Create Test Account
+        </button>
+        <button id="test-account-list" class="btn">List Accounts</button>
+        <button id="test-account-clear" class="btn danger">
+          Clear All Accounts
+        </button>
+        <div id="account-log" class="log"></div>
+      </div>
+
+      <!-- Payment Card Operations -->
+      <div class="test-section">
+        <h3>💳 Payment Card Operations</h3>
+        <button id="test-card-import" class="btn success">
+          Import Test Cards
+        </button>
+        <button id="test-card-list" class="btn">List Cards</button>
+        <button id="test-card-clear" class="btn danger">Clear All Cards</button>
+        <div id="card-log" class="log"></div>
+      </div>
+
+      <!-- Performance Test -->
+      <div class="test-section">
+        <h3>⚡ Performance Test</h3>
+        <button id="test-performance" class="btn">Run Performance Test</button>
+        <div id="performance-log" class="log"></div>
+      </div>
+    </div>
+
+    <!-- Include SQLite-only services -->
+    <script src="../libs/sql.js"></script>
+
+    <!-- 🔧 EMERGENCY FIX: Load Foundation Services First -->
+    <script src="../services/config.js"></script>
+    <script src="../services/logger.js"></script>
+    <script src="../services/error-handler.js"></script>
+    <script src="../services/input-validator.js"></script>
+
+    <script src="../services/database/base-database-service.js"></script>
+    <script src="../services/database/accounts-database-service.js"></script>
+    <script src="../services/database/cards-database-service.js"></script>
+    <script src="../services/database/database-manager.js"></script>
+    <script src="../services/account.js"></script>
+    <script src="../services/payment.js"></script>
+
+    <script>
+      // SQLite-Only Test Suite
+      class SQLiteOnlyTestSuite {
+        constructor() {
+          this.testResults = { passed: 0, failed: 0 };
+        }
+
+        async init() {
+          this.log("🚀 Initializing SQLite-only test suite...");
+          const startTime = performance.now();
+
+          try {
+            // Mock Chrome APIs for testing
+            this.mockChromeAPIs();
+
+            // Services should auto-initialize SQLite
+            this.log("✅ SQLite-only test suite initialized");
+
+            const initTime = performance.now() - startTime;
+            document.getElementById("init-time").textContent = `${Math.round(
+              initTime
+            )}ms`;
+
+            this.updateStatus("SQLite-only test suite ready", "success");
+
+            // Auto-update stats
+            await this.updateStats();
+          } catch (error) {
+            this.log(`❌ Initialization failed: ${error.message}`);
+            this.updateStatus("Initialization failed", "error");
+          }
+        }
+
+        mockChromeAPIs() {
+          window.chrome = {
+            storage: {
+              local: {
+                get: () => Promise.resolve({}),
+                set: () => Promise.resolve(),
+                remove: () => Promise.resolve(),
+                clear: () => Promise.resolve(),
+              },
+            },
+            runtime: { getURL: (path) => path },
+            downloads: {
+              download: (options, callback) => callback && callback(Date.now()),
+            },
+            cookies: {
+              getAll: () => Promise.resolve([]),
+              set: () => Promise.resolve({}),
+              remove: () => Promise.resolve({}),
+            },
+            action: {
+              setBadgeText: () => Promise.resolve(),
+              setBadgeBackgroundColor: () => Promise.resolve(),
+            },
+            tabs: {
+              query: () => Promise.resolve([]),
+              update: () => Promise.resolve(),
+              create: () => Promise.resolve(),
+            },
+          };
+        }
+
+        log(message, elementId = "account-log") {
+          const timestamp = new Date().toISOString().substr(11, 8);
+          const logElement = document.getElementById(elementId);
+          if (logElement) {
+            logElement.textContent += `[${timestamp}] ${message}\n`;
+            logElement.scrollTop = logElement.scrollHeight;
+          }
+          console.log(message);
+        }
+
+        updateStatus(message, type = "info") {
+          const statusElement = document.getElementById("status");
+          statusElement.textContent = message;
+          statusElement.className = `status ${type}`;
+        }
+
+        async updateStats() {
+          try {
+            const accounts = await accountService.getAll();
+            const cards = await paymentService.getCards();
+
+            document.getElementById("accounts-count").textContent =
+              accounts.length;
+            document.getElementById("cards-count").textContent = cards.length;
+          } catch (error) {
+            console.warn("Failed to update stats:", error);
+          }
+        }
+
+        async testAccountCreate() {
+          this.log("👤 Creating test account...", "account-log");
+          try {
+            const accountName = `test_account_${Date.now()}`;
+            const testCookies = [
+              {
+                name: "SessionToken",
+                value: `test_token_${Date.now()}`,
+                domain: "cursor.com",
+                path: "/",
+                secure: true,
+              },
+            ];
+
+            await accountService.upsert(accountName, testCookies);
+            await accountService.saveAccountInfo(
+              accountName,
+              `${accountName}@test.com`,
+              "free"
+            );
+
+            this.log(`✅ Created account: ${accountName}`, "account-log");
+            this.testResults.passed++;
+            await this.updateStats();
+          } catch (error) {
+            this.log(
+              `❌ Account creation failed: ${error.message}`,
+              "account-log"
+            );
+            this.testResults.failed++;
+          }
+        }
+
+        async testAccountList() {
+          this.log("📋 Listing accounts...", "account-log");
+          try {
+            const accounts = await accountService.getAll();
+            this.log(`Found ${accounts.length} accounts:`, "account-log");
+
+            accounts.forEach((account, index) => {
+              this.log(
+                `  ${index + 1}. ${account.name} (${account.email}) - ${
+                  account.status
+                }`,
+                "account-log"
+              );
+            });
+
+            this.testResults.passed++;
+          } catch (error) {
+            this.log(
+              `❌ Account listing failed: ${error.message}`,
+              "account-log"
+            );
+            this.testResults.failed++;
+          }
+        }
+
+        async testAccountClear() {
+          this.log("🧹 Clearing all accounts...", "account-log");
+          try {
+            await accountService.clearAllData();
+            this.log("✅ All accounts cleared", "account-log");
+            this.testResults.passed++;
+            await this.updateStats();
+          } catch (error) {
+            this.log(
+              `❌ Account clearing failed: ${error.message}`,
+              "account-log"
+            );
+            this.testResults.failed++;
+          }
+        }
+
+        async testCardImport() {
+          this.log("💳 Importing test cards...", "card-log");
+          try {
+            const testCardData = [
+              "4111111111111111|12|25|123",
+              "5555555555554444|06|26|456",
+              "378282246310005|03|27|789",
+            ].join("\n");
+
+            const importedCount = await paymentService.importCards(
+              testCardData
+            );
+            this.log(`✅ Imported ${importedCount} cards`, "card-log");
+            this.testResults.passed++;
+            await this.updateStats();
+          } catch (error) {
+            this.log(`❌ Card import failed: ${error.message}`, "card-log");
+            this.testResults.failed++;
+          }
+        }
+
+        async testCardList() {
+          this.log("📋 Listing cards...", "card-log");
+          try {
+            const cards = await paymentService.getCards();
+            this.log(`Found ${cards.length} cards:`, "card-log");
+
+            cards.forEach((card, index) => {
+              this.log(
+                `  ${index + 1}. ${card.type} ending in ${card.number.slice(
+                  -4
+                )} (${card.expiry})`,
+                "card-log"
+              );
+            });
+
+            this.testResults.passed++;
+          } catch (error) {
+            this.log(`❌ Card listing failed: ${error.message}`, "card-log");
+            this.testResults.failed++;
+          }
+        }
+
+        async testCardClear() {
+          this.log("🧹 Clearing all cards...", "card-log");
+          try {
+            await paymentService.clearAllCards();
+            this.log("✅ All cards cleared", "card-log");
+            this.testResults.passed++;
+            await this.updateStats();
+          } catch (error) {
+            this.log(`❌ Card clearing failed: ${error.message}`, "card-log");
+            this.testResults.failed++;
+          }
+        }
+
+        async testPerformance() {
+          this.log("⚡ Running performance test...", "performance-log");
+          try {
+            // Test multiple operations
+            const operations = [
+              { name: "Account Creation", fn: () => this.testAccountCreate() },
+              { name: "Account Listing", fn: () => this.testAccountList() },
+              { name: "Card Import", fn: () => this.testCardImport() },
+              { name: "Card Listing", fn: () => this.testCardList() },
+            ];
+
+            for (const operation of operations) {
+              const startTime = performance.now();
+              await operation.fn();
+              const duration = performance.now() - startTime;
+              this.log(
+                `${operation.name}: ${duration.toFixed(2)}ms`,
+                "performance-log"
+              );
+            }
+
+            // Test batch operations
+            const batchStart = performance.now();
+            const batchSize = 10;
+
+            for (let i = 0; i < batchSize; i++) {
+              await accountService.upsert(`batch_account_${i}`, [
+                {
+                  name: "TestCookie",
+                  value: `test_value_${i}`,
+                  domain: "example.com",
+                },
+              ]);
+            }
+
+            const batchDuration = performance.now() - batchStart;
+            this.log(
+              `Batch create ${batchSize} accounts: ${batchDuration.toFixed(
+                2
+              )}ms`,
+              "performance-log"
+            );
+            this.log(
+              `Average per account: ${(batchDuration / batchSize).toFixed(
+                2
+              )}ms`,
+              "performance-log"
+            );
+
+            this.testResults.passed++;
+            await this.updateStats();
+          } catch (error) {
+            this.log(
+              `❌ Performance test failed: ${error.message}`,
+              "performance-log"
+            );
+            this.testResults.failed++;
+          }
+        }
+
+        showTestSummary() {
+          const total = this.testResults.passed + this.testResults.failed;
+          this.log(`\n📊 SQLite-Only Test Summary:`, "performance-log");
+          this.log(`Total tests: ${total}`, "performance-log");
+          this.log(`✅ Passed: ${this.testResults.passed}`, "performance-log");
+          this.log(`❌ Failed: ${this.testResults.failed}`, "performance-log");
+
+          if (this.testResults.failed === 0) {
+            this.updateStatus(
+              `All SQLite-only tests passed! (${this.testResults.passed}/${total})`,
+              "success"
+            );
+          } else {
+            this.updateStatus(
+              `Some tests failed (${this.testResults.failed}/${total})`,
+              "error"
+            );
+          }
+        }
+      }
+
+      // Initialize test suite
+      let testSuite;
+
+      document.addEventListener("DOMContentLoaded", async () => {
+        testSuite = new SQLiteOnlyTestSuite();
+        await testSuite.init();
+
+        // Bind event listeners
+        document.getElementById("test-account-create").onclick = () =>
+          testSuite.testAccountCreate();
+        document.getElementById("test-account-list").onclick = () =>
+          testSuite.testAccountList();
+        document.getElementById("test-account-clear").onclick = () =>
+          testSuite.testAccountClear();
+
+        document.getElementById("test-card-import").onclick = () =>
+          testSuite.testCardImport();
+        document.getElementById("test-card-list").onclick = () =>
+          testSuite.testCardList();
+        document.getElementById("test-card-clear").onclick = () =>
+          testSuite.testCardClear();
+
+        document.getElementById("test-performance").onclick = () =>
+          testSuite.testPerformance();
+      });
+    </script>
+  </body>
+</html>

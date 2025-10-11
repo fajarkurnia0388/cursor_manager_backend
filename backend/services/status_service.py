@@ -3,7 +3,11 @@ Status Service - Check and refresh account status
 """
 
 import logging
-from typing import Dict, Any, Optional
+from typing import Any, Dict, Optional, TYPE_CHECKING
+
+from account_service import ACCOUNT_STATUS_VALUES, DEFAULT_ACCOUNT_STATUS
+if TYPE_CHECKING:  # pragma: no cover
+    from services.event_service import EventService
 
 logger = logging.getLogger(__name__)
 
@@ -11,9 +15,10 @@ logger = logging.getLogger(__name__)
 class StatusService:
     """Service untuk check dan refresh account status"""
 
-    def __init__(self, db, account_service):
+    def __init__(self, db, account_service, event_service: Optional["EventService"] = None):
         self.db = db
         self.account_service = account_service
+        self.event_service = event_service
         logger.info("StatusService initialized")
 
     def refresh_account_status(self, account_id: int) -> Dict[str, Any]:
@@ -32,13 +37,23 @@ class StatusService:
             # For now, mark as pending refresh
             logger.info(f"Account {account_id} marked for status refresh")
 
-            return {
+            result = {
                 "success": True,
                 "account_id": account_id,
                 "email": account["email"],
                 "status": "pending_refresh",
                 "message": "Account marked for refresh. Extension will provide status update.",
             }
+
+            self._emit_event(
+                "refresh_request",
+                {
+                    "account_id": account_id,
+                    "email": account["email"],
+                },
+            )
+
+            return result
 
         except Exception as e:
             logger.error(f"Error refreshing account status: {str(e)}", exc_info=True)
@@ -62,29 +77,42 @@ class StatusService:
             subscription_status = api_response.get("subscription_status", "unknown")
 
             # Determine status
+            subscription_key = (subscription_status or "").lower()
+            subscription_map = {
+                "limit_pro_trial": "limit pro-trial",
+                "limit_pro": "limit pro",
+                "pro_plus": "pro+ plan",
+                "ultra": "ultra",
+                "teams": "teams",
+            }
+
+            status = DEFAULT_ACCOUNT_STATUS
             if is_premium:
-                status = "premium"
+                status = "pro"
             elif trial_active:
-                status = "trial"
+                status = "pro-trial"
+            elif subscription_key in subscription_map:
+                status = subscription_map[subscription_key]
             elif is_active:
-                status = "active"
+                status = DEFAULT_ACCOUNT_STATUS
             else:
-                status = "inactive"
+                status = "limit pro"
+
+            if status not in ACCOUNT_STATUS_VALUES:
+                status = DEFAULT_ACCOUNT_STATUS
 
             # Update account
             self.account_service.update(
                 account_id,
-                {
-                    "status": status,
-                    "subscription_status": subscription_status,
-                    "is_premium": is_premium,
-                    "trial_active": trial_active,
-                },
+                status=status,
+                subscription_status=subscription_status,
+                is_premium=is_premium,
+                trial_active=trial_active,
             )
 
             logger.info(f"Updated account {account_id} status to: {status}")
 
-            return {
+            result = {
                 "success": True,
                 "account_id": account_id,
                 "status": status,
@@ -92,6 +120,17 @@ class StatusService:
                 "is_premium": is_premium,
                 "trial_active": trial_active,
             }
+
+            self._emit_event(
+                "status_updated",
+                {
+                    "account_id": account_id,
+                    "status": status,
+                    "subscription_status": subscription_status,
+                },
+            )
+
+            return result
 
         except Exception as e:
             logger.error(
@@ -112,13 +151,23 @@ class StatusService:
 
             logger.info(f"Marked {len(account_ids)} accounts for status refresh")
 
-            return {
+            result = {
                 "success": True,
                 "account_ids": account_ids,
                 "total": len(account_ids),
                 "status": "pending_refresh",
                 "message": "Accounts marked for refresh. Extension will provide updates.",
             }
+
+            self._emit_event(
+                "refresh_bulk",
+                {
+                    "total": len(account_ids),
+                    "limit": limit,
+                },
+            )
+
+            return result
 
         except Exception as e:
             logger.error(f"Error refreshing all accounts: {str(e)}", exc_info=True)
@@ -270,3 +319,15 @@ class StatusService:
         except Exception as e:
             logger.error(f"Error getting system health: {str(e)}", exc_info=True)
             raise
+
+    def _emit_event(self, action: str, payload: Dict[str, Any]) -> None:
+        if not self.event_service:
+            return
+        try:
+            self.event_service.record_event(
+                entity_type="status",
+                action=action,
+                payload=payload,
+            )
+        except Exception as exc:  # pragma: no cover - defensive log
+            logger.debug("Failed to record status event %s: %s", action, exc)

@@ -1,0 +1,1373 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Cursor Account Manager - Sidebar</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="legacy/sidepanel-modern.css" />
+  </head>
+  <body>
+    <div id="sidebar-app">
+      <!-- Header -->
+      <div class="sidebar-header">
+        <div class="title">
+          <span class="icon">🛡️</span>
+          <h2>Cursor Accounts</h2>
+        </div>
+        <div class="header-actions">
+          <button id="darkModeToggle" class="icon-btn" title="Toggle Dark Mode">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <path
+                d="M17.75,4.09L15.22,6.03L16.13,9.09L13.5,7.28L10.87,9.09L11.78,6.03L9.25,4.09L12.44,4L13.5,1L14.56,4L17.75,4.09M21.25,11L19.61,12.25L20.2,14.23L18.5,13.06L16.8,14.23L17.39,12.25L15.75,11L17.81,10.95L18.5,9L19.19,10.95L21.25,11M18.97,15.95C19.8,15.87 20.69,17.05 20.16,17.8C19.84,18.25 19.5,18.67 19.08,19.07C15.17,23 8.84,23 4.94,19.07C1.03,15.17 1.03,8.83 4.94,4.93C5.34,4.53 5.76,4.17 6.21,3.85C6.96,3.32 8.14,4.21 8.06,5.04C7.79,7.9 8.75,10.87 10.95,13.06C13.14,15.26 16.1,16.22 18.97,15.95M17.33,17.97C14.5,17.81 11.7,16.64 9.53,14.5C7.36,12.31 6.2,9.5 6.04,6.68C3.23,9.82 3.34,14.4 6.35,17.41C9.37,20.43 14,20.54 17.33,17.97Z"
+              />
+            </svg>
+          </button>
+          <button id="refreshBtn" class="icon-btn" title="Refresh">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <path
+                d="M17.65,6.35C16.2,4.9 14.21,4 12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20C15.73,20 18.84,17.45 19.73,14H17.65C16.83,16.33 14.61,18 12,18A6,6 0 0,1 6,12A6,6 0 0,1 12,6C13.66,6 15.14,6.69 16.22,7.78L13,11H20V4L17.65,6.35Z"
+              />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Debug Panel (Hidden by default) -->
+      <div class="debug-section">
+        <button
+          id="debugToggle"
+          class="btn btn-link btn-sm debug-toggle"
+          style="display: none"
+          title="Toggle Debug Panel (Ctrl+Shift+D)"
+        >
+          🐛 Debug
+        </button>
+        <div id="debugPanel" class="debug-panel" style="display: none">
+          <h3>Debug Tools</h3>
+          <div class="debug-actions">
+            <button id="showStoredDataBtn" class="btn btn-secondary btn-sm">
+              📄 Show Data
+            </button>
+            <button id="clearAllDataBtn" class="btn btn-danger btn-sm">
+              🗑️ Clear All
+            </button>
+            <button
+              id="consolidateDuplicatesBtn"
+              class="btn btn-secondary btn-sm"
+            >
+              🔧 Fix Duplicates
+            </button>
+          </div>
+          <div id="debugOutput" class="debug-output"></div>
+        </div>
+      </div>
+
+      <!-- Current Account Section -->
+      <div class="current-account-section">
+        <div class="current-label">Active Account</div>
+        <div class="current-account" id="currentAccount">
+          <span class="account-icon">🔴</span>
+          <div class="account-details">
+            <span class="account-name">Not logged in</span>
+            <span class="account-status"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab Navigation with Bypass Testing -->
+      <div class="tab-navigation navbar">
+        <button id="accountsTab" class="tab-btn active">👤 Accounts</button>
+        <button id="paymentsTab" class="tab-btn">💳 Cards</button>
+        <button id="generatorTab" class="tab-btn">🎲 Generator</button>
+        <button id="bypassTab" class="tab-btn">🛡️ Bypass</button>
+      </div>
+
+      <!-- Accounts Tab Content -->
+      <div id="accountsContent" class="tab-content">
+        <!-- Quick Actions -->
+        <div class="quick-actions">
+          <button id="addAccountBtn" class="btn btn-primary icon-only" title="Add Account from JSON">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M15,14C12.33,14 7,15.33 7,18V20H23V18C23,15.33 17.67,14 15,14M6,10V7H4V10H1V12H4V15H6V12H9V10M15,12A4,4 0 0,0 19,8A4,4 0 0,0 15,4A4,4 0 0,0 11,8A4,4 0 0,0 15,12Z"/>
+            </svg>
+            <span class="tooltip">Add Account</span>
+          </button>
+          <button id="addCurrentBtn" class="btn btn-secondary icon-only" title="Add Current Session">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z"/>
+            </svg>
+            <span class="tooltip">Add Current</span>
+          </button>
+          <button id="exportCurrentBtn" class="btn btn-secondary icon-only" title="Export Active Account">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
+            </svg>
+            <span class="tooltip">Export</span>
+          </button>
+          <button id="activateProTrialBtn" class="btn btn-success icon-only" title="Activate Pro Trial">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M7,2V13H10V22L17,10H13L17,2H7Z" />
+            </svg>
+            <span class="tooltip">Pro Trial</span>
+          </button>
+          <button id="refreshStatusBtn" class="btn btn-info icon-only" title="Refresh Account Status">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M17.65,6.35C16.2,4.9 14.21,4 12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20C15.73,20 18.84,17.45 19.73,14H17.65C16.83,16.33 14.61,18 12,18A6,6 0 0,1 6,12A6,6 0 0,1 12,6C13.66,6 15.14,6.69 16.22,7.78L13,11H20V4L17.65,6.35Z"/>
+            </svg>
+            <span class="tooltip">Refresh Status</span>
+          </button>
+          <button id="toggleAdvancedBtn" class="btn btn-text icon-only" title="Show/Hide Advanced Tools">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12,15.5A3.5,3.5 0 0,1 8.5,12A3.5,3.5 0 0,1 12,8.5A3.5,3.5 0 0,1 15.5,12A3.5,3.5 0 0,1 12,15.5M19.43,12.97C19.47,12.65 19.5,12.33 19.5,12C19.5,11.67 19.47,11.34 19.43,11L21.54,9.37C21.73,9.22 21.78,8.95 21.66,8.73L19.66,5.27C19.54,5.05 19.27,4.96 19.05,5.05L16.56,6.05C16.04,5.66 15.5,5.32 14.87,5.07L14.5,2.42C14.46,2.18 14.25,2 14,2H10C9.75,2 9.54,2.18 9.5,2.42L9.13,5.07C8.5,5.32 7.96,5.66 7.44,6.05L4.95,5.05C4.73,4.96 4.46,5.05 4.34,5.27L2.34,8.73C2.22,8.95 2.27,9.22 2.46,9.37L4.57,11C4.53,11.34 4.5,11.67 4.5,12C4.5,12.33 4.53,12.65 4.57,12.97L2.46,14.63C2.27,14.78 2.22,15.05 2.34,15.27L4.34,18.73C4.46,18.95 4.73,19.03 4.95,18.95L7.44,17.94C7.96,18.34 8.5,18.68 9.13,18.93L9.5,21.58C9.54,21.82 9.75,22 10,22H14C14.25,22 14.46,21.82 14.5,21.58L14.87,18.93C15.5,18.68 16.04,18.34 16.56,17.94L19.05,18.95C19.27,19.03 19.54,18.95 19.66,18.73L21.66,15.27C21.78,15.05 21.73,14.78 21.54,14.63L19.43,12.97Z"/>
+            </svg>
+            <span class="tooltip">Show Tools</span>
+          </button>
+        </div>
+
+        <!-- Advanced Actions (collapsible) -->
+        <div class="advanced-actions">
+          <div id="advancedPanel" class="advanced-panel" style="display: none; max-height: 400px; overflow-y: auto; padding: 10px; border: 1px solid var(--border-color); border-radius: 8px; margin-top: 10px;">
+            <h4 style="margin-top: 0; margin-bottom: 10px; color: var(--text-primary);">Import Tools</h4>
+            <div class="quick-actions" style="flex-wrap: wrap; gap: 8px;">
+              <button id="importFromDownloadsBtn" class="btn btn-secondary" style="flex: 1; min-width: 140px;">
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                >
+                  <path
+                    d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"
+                  />
+                </svg>
+                Downloads
+              </button>
+              <button id="importFolderBtn" class="btn btn-secondary" style="flex: 1; min-width: 140px;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M10,4H4C2.89,4 2,4.89 2,6V18A2,2 0 0,0 4,20H20A2,2 0 0,0 22,18V8C22,6.89 21.1,6 20,6H12L10,4Z"/>
+                </svg>
+                Folder
+              </button>
+              <button id="importMultipleBtn" class="btn btn-secondary" style="flex: 1; min-width: 140px;" title="Select multiple JSON files">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z M15,11H16.5V16H18V11H19.5L17.25,8.5L15,11Z"/>
+                </svg>
+                Multiple
+              </button>
+            </div>
+            
+            <h4 style="margin-top: 15px; margin-bottom: 10px; color: var(--text-primary);">Maintenance</h4>
+            <div class="quick-actions" style="flex-wrap: wrap; gap: 8px;">
+              <button id="consolidateDuplicatesBtn" class="btn btn-secondary" style="flex: 1; min-width: 140px;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M11,16.5L6.5,12L7.91,10.59L11,13.67L16.59,8.09L18,9.5L11,16.5Z"/>
+                </svg>
+                Fix Duplicates
+              </button>
+              <button id="clearAllDataBtn" class="btn btn-danger" style="flex: 1; min-width: 140px;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/>
+                </svg>
+                Clear All
+              </button>
+            </div>
+            
+            <h4 style="margin-top: 15px; margin-bottom: 10px; color: var(--text-primary);">Database Management</h4>
+            <div class="quick-actions" style="flex-wrap: wrap; gap: 8px;">
+              <button id="exportDatabaseBtn" class="btn btn-primary" style="flex: 1; min-width: 100px;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12,1L8,5H11V14H13V5H16M18,23H6C4.89,23 4,22.1 4,21V9A2,2 0 0,1 6,7H9V9H6V21H18V9H15V7H18A2,2 0 0,1 20,9V21A2,2 0 0,1 18,23Z"/>
+                </svg>
+                Export
+              </button>
+              <button id="importDatabaseBtn" class="btn btn-secondary" style="flex: 1; min-width: 100px;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20M12,19L8,15H10.5V12H13.5V15H16L12,19Z"/>
+                </svg>
+                Import
+              </button>
+              <button id="openDatabaseLocationBtn" class="btn btn-info" style="flex: 1; min-width: 100px;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M10,4H4C2.89,4 2,4.89 2,6V18A2,2 0 0,0 4,20H20A2,2 0 0,0 22,18V8C22,6.89 21.1,6 20,6H12L10,4Z"/>
+                </svg>
+                Open
+              </button>
+              <button id="autoSyncToggleBtn" class="btn btn-success" style="flex: 1; min-width: 100px;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12,18A6,6 0 0,1 6,12C6,11 6.25,10.03 6.7,9.2L5.24,7.74C4.46,8.97 4,10.43 4,12A8,8 0 0,0 12,20V23L16,19L12,15M12,4V1L8,5L12,9V6A6,6 0 0,1 18,12C18,13 17.75,13.97 17.3,14.8L18.76,16.26C19.54,15.03 20,13.57 20,12A8,8 0 0,0 12,4Z"/>
+                </svg>
+                Sync
+            </div>
+            <hr style="margin: 12px 0; border: 1px solid var(--border-color)" />
+            <div class="quick-actions">
+              <button id="deleteFreeAccountBtn" class="btn btn-danger">
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                >
+                  <path
+                    d="M12,2C13.1,2 14,2.9 14,4C14,5.1 13.1,6 12,6C10.9,6 10,5.1 10,4C10,2.9 10.9,2 12,2M21,9V7L15,1H5C3.89,1 3,1.89 3,3V21A2,2 0 0,0 5,23H19A2,2 0 0,0 21,21V9M19,9H14V4H5V21H19V9Z"
+                  />
+                </svg>
+                Delete Free Account
+              </button>
+              <button id="deleteProTrialAccountBtn" class="btn btn-danger">
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                >
+                  <path d="M7,2V13H10V22L17,10H13L17,2H7Z" />
+                </svg>
+                Delete Pro Trial Account
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Accounts List -->
+        <div class="accounts-section">
+          <div class="section-header" style="display: flex; align-items: center; justify-content: space-between;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <h3 style="margin: 0;">Accounts</h3>
+              <span id="accountsCount" class="count">(0)</span>
+            </div>
+            <button id="toggleDatabaseView" class="btn btn-sm btn-secondary" style="display: flex; align-items: center; gap: 4px; padding: 4px 8px;" title="Toggle Database View">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12,3C7.58,3 4,4.79 4,7C4,9.21 7.58,11 12,11C16.42,11 20,9.21 20,7C20,4.79 16.42,3 12,3M4,9V12C4,14.21 7.58,16 12,16C16.42,16 20,14.21 20,12V9C20,11.21 16.42,13 12,13C7.58,13 4,11.21 4,9M4,14V17C4,19.21 7.58,21 12,21C16.42,21 20,19.21 20,17V14C20,16.21 16.42,18 12,18C7.58,18 4,16.21 4,14Z"/>
+              </svg>
+              <span id="dbViewToggleText">Table View</span>
+            </button>
+          </div>
+
+          <!-- Account Filters -->
+          <div class="account-filters">
+            <div class="filter-row">
+              <input
+                type="text"
+                id="accountFilterInput"
+                placeholder="Filter accounts by name, email..."
+                class="filter-input"
+              />
+              <select id="accountStatusFilter" class="filter-select">
+                <option value="">All Status</option>
+                <option value="free">Free</option>
+                <option value="pro trial">Pro Trial</option>
+                <option value="pro plan">Pro Plan</option>
+                <option value="business">Business</option>
+                <option value="empty">Empty Status</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Database Table View (hidden by default) -->
+          <div id="databaseTableView" class="database-table-view scrollable" style="display: none;">
+            <table class="accounts-table">
+              <thead>
+                <tr>
+                  <th>Email</th>
+                  <th>Status</th>
+                  <th>Plan</th>
+                  <th>Active</th>
+                  <th>Cookie Status</th>
+                </tr>
+              </thead>
+              <tbody id="accountsTableBody">
+                <!-- Table rows will be populated here -->
+              </tbody>
+            </table>
+          </div>
+
+          <div id="accountsList" class="sidebar-accounts-list scrollable">
+            <!-- Accounts will be populated here -->
+          </div>
+
+          <div id="noAccounts" class="empty-state" style="display: none">
+            <div class="empty-icon">📁</div>
+            <p>No accounts</p>
+            <p class="hint">Click ➕ to add</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Payments Tab Content -->
+      <div id="paymentsContent" class="tab-content" style="display: none">
+        <!-- Quick Actions -->
+        <div class="quick-actions">
+          <button id="importCardsBtn" class="btn btn-primary">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path
+                d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"
+              />
+            </svg>
+            Import Cards
+          </button>
+          <button id="exportCardsBtn" class="btn btn-success">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path
+                d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"
+              />
+            </svg>
+            Export Cards
+          </button>
+          <button id="findPaymentFieldsBtn" class="btn btn-secondary">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path
+                d="M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L14.71,14H15.5L20.5,19L19,20.5L14,15.5V14.71L13.73,14.44C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z"
+              />
+            </svg>
+            Find Fields
+          </button>
+          <button id="clearCardsBtn" class="btn btn-danger">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path
+                d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"
+              />
+            </svg>
+            Clear All
+          </button>
+        </div>
+
+        <!-- Payment Cards List -->
+        <div class="cards-section">
+          <div class="section-header" style="display: flex; align-items: center; justify-content: space-between;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <h3 style="margin: 0;">Payment Cards</h3>
+              <span class="cards-count" id="cardsCount">(0)</span>
+            </div>
+            <button id="toggleCardsTableView" class="btn btn-sm btn-secondary" style="display: flex; align-items: center; gap: 4px; padding: 4px 8px;" title="Toggle Table View">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12,3C7.58,3 4,4.79 4,7C4,9.21 7.58,11 12,11C16.42,11 20,9.21 20,7C20,4.79 16.42,3 12,3M4,9V12C4,14.21 7.58,16 12,16C16.42,16 20,14.21 20,12V9C20,11.21 16.42,13 12,13C7.58,13 4,11.21 4,9M4,14V17C4,19.21 7.58,21 12,21C16.42,21 20,19.21 20,17V14C20,16.21 16.42,18 12,18C7.58,18 4,16.21 4,14Z"/>
+              </svg>
+              <span id="cardsViewToggleText">Table View</span>
+            </button>
+          </div>
+
+          <!-- Card Filters and Bulk Actions -->
+          <div class="card-filters">
+            <div class="filter-row">
+              <input
+                type="text"
+                id="cardFilterInput"
+                placeholder="Filter cards by number, type, expiry..."
+                class="filter-input"
+              />
+              <select id="cardTypeFilter" class="filter-select">
+                <option value="">All Types</option>
+                <option value="visa">Visa</option>
+                <option value="mastercard">MasterCard</option>
+                <option value="american express">American Express</option>
+                <option value="discover">Discover</option>
+                <option value="unknown">Unknown</option>
+              </select>
+            </div>
+
+            <div class="bulk-actions" id="bulkActions" style="display: none">
+              <label class="select-all-container">
+                <input type="checkbox" id="selectAllCards" />
+                <span>Select All</span>
+              </label>
+              <button id="deleteSelectedBtn" class="btn btn-danger btn-sm">
+                🗑️ Delete Selected (<span id="selectedCount">0</span>)
+              </button>
+              <button id="clearSelectionBtn" class="btn btn-secondary btn-sm">
+                ✖️ Clear Selection
+              </button>
+            </div>
+          </div>
+
+          <!-- Cards Table View (hidden by default) -->
+          <div id="cardsTableView" class="database-table-view scrollable" style="display: none;">
+            <table class="accounts-table">
+              <thead>
+                <tr>
+                  <th>Card Number</th>
+                  <th>Type</th>
+                  <th>Expiry</th>
+                  <th>CVV</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="cardsTableBody">
+                <!-- Table rows will be populated here -->
+              </tbody>
+            </table>
+          </div>
+
+          <div id="cardsList" class="cards-list scrollable">
+            <!-- Cards will be populated here -->
+          </div>
+
+          <div id="noCards" class="empty-state" style="display: none">
+            <div class="empty-icon">💳</div>
+            <p>No payment cards imported</p>
+            <p class="hint">
+              Click "Import Cards" to load card data from card.md files
+            </p>
+          </div>
+
+          <!-- Payment Form Detection -->
+          <div id="paymentFormInfo" class="form-info" style="display: none">
+            <div class="info-header">Payment Form Detected</div>
+            <div id="formFieldsInfo"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Generator Tab Content -->
+      <div id="generatorContent" class="tab-content" style="display: none">
+        <!-- Payment Generator Panel -->
+        <div class="generator-panel">
+          <div class="panel-header">
+            <h3>💳 Payment Data Generator</h3>
+          </div>
+
+          <div class="panel-content">
+            <div class="settings-grid">
+              <div class="settings-group">
+                <label>BIN (Bank Identification Number):</label>
+                <div class="bin-input-container">
+                  <input
+                    type="text"
+                    id="binInput"
+                    value="552461"
+                    placeholder="e.g., 552461 or 5524xxxxxxxxx"
+                    class="form-input"
+                  />
+                  <div
+                    id="binHistoryDropdown"
+                    class="bin-history-dropdown"
+                    style="display: none"
+                  >
+                    <!-- BIN history items will be populated here -->
+                  </div>
+                </div>
+              </div>
+
+              <div class="settings-group">
+                <label>Quantity:</label>
+                <input
+                  type="number"
+                  id="cardQuantity"
+                  min="1"
+                  max="100"
+                  value="10"
+                  class="form-input"
+                />
+              </div>
+
+              <div class="settings-group">
+                <label>Month:</label>
+                <select id="monthSelect" class="form-select">
+                  <option value="Random">Random</option>
+                  <option value="01">01</option>
+                  <option value="02">02</option>
+                  <option value="03">03</option>
+                  <option value="04">04</option>
+                  <option value="05">05</option>
+                  <option value="06">06</option>
+                  <option value="07">07</option>
+                  <option value="08">08</option>
+                  <option value="09">09</option>
+                  <option value="10">10</option>
+                  <option value="11">11</option>
+                  <option value="12">12</option>
+                </select>
+              </div>
+
+              <div class="settings-group">
+                <label>Year:</label>
+                <select id="yearSelect" class="form-select">
+                  <option value="Random">Random</option>
+                  <option value="25">2025</option>
+                  <option value="26">2026</option>
+                  <option value="27">2027</option>
+                  <option value="28">2028</option>
+                  <option value="29">2029</option>
+                  <option value="30">2030</option>
+                  <option value="31">2031</option>
+                  <option value="32">2032</option>
+                  <option value="33">2033</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="settings-group action-buttons">
+              <button id="generateCardsBtn" class="btn btn-primary">
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                >
+                  <path
+                    d="M20,8H4V6H20M20,18H4V12H20M20,4H4C2.89,4 2,4.89 2,6V18A2,2 0 0,0 4,20H20A2,2 0 0,0 22,18V6C22,4.89 21.11,4 20,4Z"
+                  />
+                </svg>
+                Generate Payment Data
+              </button>
+            </div>
+
+            <div class="output-section">
+              <label>Generated Payment Data:</label>
+              <textarea
+                id="cardOutput"
+                readonly
+                class="output-textarea"
+                placeholder="Generated payment data will appear here..."
+              ></textarea>
+            </div>
+
+            <div class="settings-grid">
+              <div class="settings-group">
+                <label>
+                  <input type="checkbox" id="autoFillEnabled" checked />
+                  Enable automatic form filling
+                </label>
+              </div>
+
+              <div class="settings-group">
+                <label>
+                  <input type="checkbox" id="autoSubmitEnabled" />
+                  Auto-submit forms after filling (be careful!)
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Address Generator Panel -->
+        <div class="generator-panel">
+          <div class="panel-header">
+            <h3>🏠 Address & Name Generator</h3>
+          </div>
+
+          <div class="panel-content">
+            <div class="settings-group">
+              <label>Country:</label>
+              <select id="countrySelect" class="form-select">
+                <option value="US">United States</option>
+                <option value="CA">Canada</option>
+                <option value="GB">United Kingdom</option>
+                <option value="DE">Germany</option>
+                <option value="FR">France</option>
+                <option value="AU">Australia</option>
+              </select>
+            </div>
+
+            <div class="settings-group action-buttons">
+              <button id="generateAddressBtn" class="btn btn-primary">
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                >
+                  <path d="M10,20V14H14V20H19V12H22L12,3L2,12H5V20H10Z" />
+                </svg>
+                Generate Address & Name
+              </button>
+            </div>
+
+            <div class="output-section">
+              <label>Generated Address & Name:</label>
+              <textarea
+                id="personalOutput"
+                readonly
+                class="output-textarea"
+                placeholder="Generated addresses and names will appear here..."
+              ></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pro Trial Activation Panel -->
+        <div class="generator-panel">
+          <div class="panel-header">
+            <h3>🚀 Pro Trial Activation</h3>
+          </div>
+
+          <div class="panel-content">
+            <div class="settings-group action-buttons">
+              <button id="activateProTrialGeneratorBtn" class="btn btn-success">
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                >
+                  <path
+                    d="M12,2A3,3 0 0,1 15,5V11A3,3 0 0,1 12,14A3,3 0 0,1 9,11V5A3,3 0 0,1 12,2M19,11C19,14.53 16.39,17.44 13,17.93V21H11V17.93C7.61,17.44 5,14.53 5,11H7A5,5 0 0,0 12,16A5,5 0 0,0 17,11H19Z"
+                  />
+                </svg>
+                Activate Pro Trial
+              </button>
+            </div>
+
+            <div class="form-hint">
+              <p><strong>Instructions:</strong></p>
+              <p>1. Make sure you're logged into Cursor.com</p>
+              <p>2. Click "Activate Pro Trial" to automatically:</p>
+              <ul>
+                <li>Generate valid payment data</li>
+                <li>Navigate to trial activation page</li>
+                <li>Fill payment form automatically</li>
+                <li>Submit trial activation</li>
+              </ul>
+              <p>
+                <strong>Note:</strong> This will use test payment data that may
+                trigger validation but won't charge real cards.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- NEW: Bypass Testing Tab Content -->
+      <div
+        id="bypassContent"
+        class="tab-content scrollable"
+        style="display: none; overflow-y: auto; max-height: calc(100vh - 200px)"
+      >
+        <div class="bypass-section" style="padding: 16px">
+          <div class="bypass-header">
+            <div
+              class="bypass-title"
+              style="display: flex; align-items: center; gap: 12px"
+            >
+              <span class="icon">🛡️</span>
+              <span>Bypass Security Tester</span>
+              <span
+                style="
+                  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+                  color: #1f2937;
+                  padding: 2px 8px;
+                  border-radius: 12px;
+                  font-size: 10px;
+                  font-weight: 600;
+                  letter-spacing: 0.5px;
+                  text-transform: uppercase;
+                  box-shadow: 0 2px 4px rgba(251, 191, 36, 0.3);
+                "
+                >Under Development</span
+              >
+            </div>
+          </div>
+
+          <!-- Control Buttons -->
+          <div class="quick-actions" style="margin-bottom: 16px">
+            <button id="bypassDetectUrl" class="btn btn-primary">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+              >
+                <path
+                  d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M12,10.5A1.5,1.5 0 0,0 10.5,12A1.5,1.5 0 0,0 12,13.5A1.5,1.5 0 0,0 13.5,12A1.5,1.5 0 0,0 12,10.5Z"
+                />
+              </svg>
+              Detect URL
+            </button>
+            <button id="bypassSettingsBtn" class="btn btn-secondary">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+              >
+                <path
+                  d="M12,15.5A3.5,3.5 0 0,1 8.5,12A3.5,3.5 0 0,1 12,8.5A3.5,3.5 0 0,1 15.5,12A3.5,3.5 0 0,1 12,15.5M19.43,12.97C19.47,12.65 19.5,12.33 19.5,12C19.5,11.67 19.47,11.34 19.43,11L21.54,9.37C21.73,9.22 21.78,8.95 21.66,8.73L19.66,5.27C19.54,5.05 19.27,4.96 19.05,5.05L16.56,6.05C16.04,5.66 15.5,5.32 14.87,5.07L14.5,2.42C14.46,2.18 14.25,2 14,2H10C9.75,2 9.54,2.18 9.5,2.42L9.13,5.07C8.5,5.32 7.96,5.66 7.44,6.05L4.95,5.05C4.73,4.96 4.46,5.05 4.34,5.27L2.34,8.73C2.22,8.95 2.27,9.22 2.46,9.37L4.57,11C4.53,11.34 4.5,11.67 4.5,12C4.5,12.33 4.53,12.65 4.57,12.97L2.46,14.63C2.27,14.78 2.22,15.05 2.34,15.27L4.34,18.73C4.46,18.95 4.73,19.03 4.95,18.95L7.44,17.94C7.96,18.34 8.5,18.68 9.13,18.93L9.5,21.58C9.54,21.82 9.75,22 10,22H14C14.25,22 14.46,21.82 14.5,21.58L14.87,18.93C15.5,18.68 16.04,18.34 16.56,17.94L19.05,18.95C19.27,19.03 19.54,18.95 19.66,18.73L21.66,15.27C21.78,15.05 21.73,14.78 21.54,14.63L19.43,12.97Z"
+                />
+              </svg>
+              Settings
+            </button>
+          </div>
+
+          <!-- Target Configuration -->
+          <div class="bypass-controls">
+            <div
+              class="input-group"
+              style="display: flex; gap: 8px; margin-bottom: 16px"
+            >
+              <input
+                type="text"
+                id="bypassTargetUrl"
+                class="bypass-url-input filter-input"
+                placeholder="https://cursor.com/api/dashboard/delete-account"
+                style="flex: 1"
+              />
+            </div>
+          </div>
+
+          <!-- Quick Actions -->
+          <div class="bypass-actions-panel">
+            <div class="panel-header">
+              <h4>Quick Actions</h4>
+            </div>
+
+            <div class="bypass-action-grid">
+              <button
+                id="startBypassTest"
+                type="button"
+                class="btn btn-success btn-sm"
+              >
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                >
+                  <path d="M8,5.14V19.14L19,12.14L8,5.14Z" />
+                </svg>
+                Start
+              </button>
+              <button
+                id="stopBypassTest"
+                type="button"
+                disabled
+                class="btn btn-secondary btn-sm"
+              >
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                >
+                  <path d="M18,18H6V6H18V18Z" />
+                </svg>
+                Stop
+              </button>
+              <button
+                id="exportBypassResults"
+                type="button"
+                class="btn btn-primary btn-sm"
+              >
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                >
+                  <path
+                    d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"
+                  />
+                </svg>
+                Export
+              </button>
+              <button
+                id="viewBypassResults"
+                type="button"
+                class="btn btn-info btn-sm"
+              >
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                >
+                  <path
+                    d="M9,17H7V10H9V17M13,17H11V7H13V17M17,17H15V13H17V17M19.5,19.1H4.5V5.1H19.5V19.1Z"
+                  />
+                </svg>
+                Results
+              </button>
+              <button
+                id="openBypassConsole"
+                type="button"
+                class="btn btn-warning btn-sm"
+              >
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                >
+                  <path
+                    d="M20,19V7H4V19H20M20,3A2,2 0 0,1 22,5V19A2,2 0 0,1 20,21H4A2,2 0 0,1 2,19V5C2,3.89 2.9,3 4,3H20M13,17V15H18V17H13M9.58,13L5.57,9H8.4L11.7,12.3C12.09,12.69 12.09,13.33 11.7,13.72L8.42,17H5.59L9.58,13Z"
+                  />
+                </svg>
+                Console
+              </button>
+            </div>
+          </div>
+
+          <!-- Techniques Selection -->
+          <div class="section-header" style="margin-top: 16px">
+            <h3>Bypass Techniques</h3>
+            <button id="bypassSelectAll" class="btn btn-link btn-sm">
+              Select All
+            </button>
+          </div>
+
+          <div class="bypass-techniques scrollable">
+            <div class="technique-item">
+              <input
+                type="checkbox"
+                id="tech-param"
+                data-technique="parameter"
+                checked
+              />
+              <label for="tech-param" class="technique-label">
+                Parameter Injection
+              </label>
+              <span class="technique-count">15 tests</span>
+            </div>
+
+            <div class="technique-item">
+              <input
+                type="checkbox"
+                id="tech-header"
+                data-technique="header"
+                checked
+              />
+              <label for="tech-header" class="technique-label">
+                Header Manipulation
+              </label>
+              <span class="technique-count">15 tests</span>
+            </div>
+
+            <div class="technique-item">
+              <input
+                type="checkbox"
+                id="tech-method"
+                data-technique="method"
+                checked
+              />
+              <label for="tech-method" class="technique-label">
+                Method Override
+              </label>
+              <span class="technique-count">20 tests</span>
+            </div>
+
+            <div class="technique-item">
+              <input
+                type="checkbox"
+                id="tech-content"
+                data-technique="content"
+                checked
+              />
+              <label for="tech-content" class="technique-label">
+                Content-Type Bypass
+              </label>
+              <span class="technique-count">9 tests</span>
+            </div>
+
+            <div class="technique-item">
+              <input
+                type="checkbox"
+                id="tech-auth"
+                data-technique="auth"
+                checked
+              />
+              <label for="tech-auth" class="technique-label">
+                Authorization Bypass
+              </label>
+              <span class="technique-count">6 tests</span>
+            </div>
+
+            <div class="technique-item">
+              <input
+                type="checkbox"
+                id="tech-storage"
+                data-technique="storage"
+                checked
+              />
+              <label for="tech-storage" class="technique-label">
+                Storage Manipulation
+              </label>
+              <span class="technique-count">20 tests</span>
+            </div>
+
+            <div class="technique-item">
+              <input
+                type="checkbox"
+                id="tech-frontend"
+                data-technique="frontend"
+                checked
+              />
+              <label for="tech-frontend" class="technique-label">
+                Frontend Override
+              </label>
+              <span class="technique-count">5 tests</span>
+            </div>
+
+            <div class="technique-item">
+              <input
+                type="checkbox"
+                id="tech-race"
+                data-technique="race"
+                checked
+              />
+              <label for="tech-race" class="technique-label">
+                Race Condition
+              </label>
+              <span class="technique-count">10 tests</span>
+            </div>
+
+            <div class="technique-item">
+              <input
+                type="checkbox"
+                id="tech-encoding"
+                data-technique="encoding"
+                checked
+              />
+              <label for="tech-encoding" class="technique-label">
+                Encoding Bypass
+              </label>
+              <span class="technique-count">9 tests</span>
+            </div>
+
+            <div class="technique-item">
+              <input
+                type="checkbox"
+                id="tech-endpoint"
+                data-technique="endpoint"
+                checked
+              />
+              <label for="tech-endpoint" class="technique-label">
+                Alternative Endpoints
+              </label>
+              <span class="technique-count">7 tests</span>
+            </div>
+          </div>
+
+          <div
+            id="bypassTotalTests"
+            style="
+              text-align: center;
+              margin: 8px 0;
+              color: var(--text-secondary);
+              font-size: 12px;
+            "
+          >
+            116 tests selected
+          </div>
+
+          <!-- Progress Section -->
+          <div
+            id="bypassProgressSection"
+            class="bypass-progress"
+            style="display: none"
+          >
+            <div class="progress-bar">
+              <div
+                class="progress-fill"
+                id="bypassProgressFill"
+                style="width: 0%"
+              ></div>
+            </div>
+            <div class="progress-text" id="bypassProgressText">
+              Initializing...
+            </div>
+          </div>
+
+          <!-- Results Section -->
+          <div
+            id="bypassResultsSection"
+            class="bypass-results"
+            style="display: none"
+          >
+            <h3 style="margin-bottom: 12px">Test Results</h3>
+            <div class="results-summary">
+              <div class="result-stat success">
+                <div class="result-value" id="bypassSuccessCount">0</div>
+                <div class="result-label">Successful</div>
+              </div>
+              <div class="result-stat partial">
+                <div class="result-value" id="bypassPartialCount">0</div>
+                <div class="result-label">Partial</div>
+              </div>
+              <div class="result-stat failed">
+                <div class="result-value" id="bypassFailedCount">0</div>
+                <div class="result-label">Failed</div>
+              </div>
+            </div>
+            <div
+              id="bypassResultDetails"
+              class="result-details"
+              style="margin-top: 12px"
+            >
+              <!-- Detailed results will be populated here -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Loading Overlay -->
+      <div id="loadingOverlay" class="loading-overlay" style="display: none">
+        <div class="spinner"></div>
+        <p>Loading...</p>
+      </div>
+
+      <!-- Notification -->
+      <div id="notification" class="notification" style="display: none">
+        <span id="notificationText"></span>
+      </div>
+    </div>
+
+    <!-- Account Item Template -->
+    <template id="sidebarAccountTemplate">
+      <div class="sidebar-account-item" data-account="">
+        <div class="account-info">
+          <div class="account-avatar">
+            <span class="account-icon">👤</span>
+            <div class="active-indicator">✓</div>
+          </div>
+          <div class="account-details">
+            <div class="account-email"></div>
+            <div class="account-meta">
+              <span class="account-status"></span>
+            </div>
+          </div>
+        </div>
+        <div class="account-actions">
+          <button class="reveal-btn" title="View database info">💾</button>
+          <button class="delete-btn" title="Delete account">🗑️</button>
+        </div>
+      </div>
+    </template>
+
+    <!-- Card Item Template -->
+    <template id="sidebarCardTemplate">
+      <div class="card-item" data-card-id="">
+        <div class="card-checkbox">
+          <input type="checkbox" class="card-select" />
+        </div>
+        <div class="card-info">
+          <div class="card-icon">
+            <span class="card-type-icon">💳</span>
+          </div>
+          <div class="card-details">
+            <div class="card-number"></div>
+            <div class="card-meta">
+              <span class="card-expiry"></span>
+              <span class="card-type"></span>
+            </div>
+          </div>
+        </div>
+        <div class="card-actions">
+          <button class="fill-btn" title="Auto-fill this card">✨</button>
+          <button class="remove-card-btn" title="Remove card">🗑️</button>
+        </div>
+      </div>
+    </template>
+
+    <!-- Account Info Modal -->
+    <div id="accountInfoModal" class="modal" style="display: none">
+      <div class="modal-content" style="max-width: 480px">
+        <div class="modal-header">
+          <h3>Account Info</h3>
+          <button class="modal-close" id="closeAccountInfoModal">✕</button>
+        </div>
+        <div class="modal-body" style="max-height: 400px; overflow-y: auto">
+          <div id="accountInfoContent"></div>
+        </div>
+        <div class="modal-footer">
+          <button id="closeAccountInfoBtn" class="btn btn-secondary">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add Account Modal -->
+    <div id="addAccountModal" class="modal" style="display: none">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Add Account</h3>
+          <button class="modal-close" id="closeModal">✕</button>
+        </div>
+        <div class="modal-body">
+          <p>Paste your Cursor account cookies JSON here:</p>
+          <textarea
+            id="cookiesInput"
+            rows="6"
+            placeholder='[{"name": "SessionToken", "value": "...", ...}]'
+          ></textarea>
+          <div class="form-group">
+            <label for="accountNameInput">Account Name (optional):</label>
+            <input
+              type="text"
+              id="accountNameInput"
+              placeholder="Auto-generated if empty"
+            />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button id="confirmAddBtn" class="btn btn-primary">Add</button>
+          <button id="cancelAddBtn" class="btn btn-secondary">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bypass Settings Modal -->
+    <div id="bypassSettingsModal" class="modal" style="display: none">
+      <div class="modal-content" style="max-width: 600px">
+        <div class="modal-header">
+          <h3>🛡️ Bypass Testing Settings</h3>
+          <button class="modal-close" id="closeBypassSettingsModal">✕</button>
+        </div>
+        <div class="modal-body" style="max-height: 400px; overflow-y: auto">
+          <!-- URL Presets Section -->
+          <div class="settings-section">
+            <h4 style="margin-bottom: 12px; color: var(--text-primary)">
+              URL Presets
+            </h4>
+            <div class="form-group">
+              <label for="bypassPresetName">Preset Name:</label>
+              <input
+                type="text"
+                id="bypassPresetName"
+                placeholder="e.g., Cursor API"
+              />
+            </div>
+            <div class="form-group">
+              <label for="bypassPresetUrl">URL:</label>
+              <input
+                type="text"
+                id="bypassPresetUrl"
+                placeholder="https://cursor.com/api/endpoint"
+              />
+            </div>
+            <button id="addBypassPreset" class="btn btn-secondary btn-sm">
+              ➕ Add Preset
+            </button>
+
+            <div id="bypassPresetsList" style="margin-top: 12px">
+              <!-- Presets will be populated here -->
+            </div>
+          </div>
+
+          <hr style="margin: 20px 0; border: 1px solid var(--border-color)" />
+
+          <!-- Advanced Options Section -->
+          <div class="settings-section">
+            <h4 style="margin-bottom: 12px; color: var(--text-primary)">
+              Advanced Options
+            </h4>
+            <div class="form-group">
+              <label for="bypassRequestDelay">Request Delay (ms):</label>
+              <input
+                type="number"
+                id="bypassRequestDelay"
+                value="500"
+                min="0"
+                max="5000"
+              />
+            </div>
+            <div class="form-group">
+              <label for="bypassTimeout">Timeout (seconds):</label>
+              <input
+                type="number"
+                id="bypassTimeout"
+                value="10"
+                min="1"
+                max="60"
+              />
+            </div>
+            <div class="form-group">
+              <label for="bypassConcurrency">Max Concurrent Requests:</label>
+              <input
+                type="number"
+                id="bypassConcurrency"
+                value="5"
+                min="1"
+                max="20"
+              />
+            </div>
+            <div class="form-group">
+              <label>
+                <input type="checkbox" id="bypassVerboseLog" checked />
+                Enable Verbose Logging
+              </label>
+            </div>
+            <div class="form-group">
+              <label>
+                <input type="checkbox" id="bypassAutoExport" />
+                Auto-export results after test
+              </label>
+            </div>
+          </div>
+
+          <hr style="margin: 20px 0; border: 1px solid var(--border-color)" />
+
+          <!-- Default Techniques Section -->
+          <div class="settings-section">
+            <h4 style="margin-bottom: 12px; color: var(--text-primary)">
+              Default Techniques
+            </h4>
+            <p
+              style="
+                font-size: 12px;
+                color: var(--text-secondary);
+                margin-bottom: 8px;
+              "
+            >
+              Select which techniques should be enabled by default:
+            </p>
+            <div
+              style="
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 8px;
+              "
+            >
+              <label
+                ><input type="checkbox" id="defaultTechParam" checked />
+                Parameter Injection</label
+              >
+              <label
+                ><input type="checkbox" id="defaultTechHeader" checked /> Header
+                Manipulation</label
+              >
+              <label
+                ><input type="checkbox" id="defaultTechMethod" checked /> Method
+                Override</label
+              >
+              <label
+                ><input type="checkbox" id="defaultTechContent" checked />
+                Content-Type</label
+              >
+              <label
+                ><input type="checkbox" id="defaultTechAuth" checked />
+                Authorization</label
+              >
+              <label
+                ><input type="checkbox" id="defaultTechStorage" checked />
+                Storage Manipulation</label
+              >
+              <label
+                ><input type="checkbox" id="defaultTechFrontend" checked />
+                Frontend Override</label
+              >
+              <label
+                ><input type="checkbox" id="defaultTechRace" checked /> Race
+                Condition</label
+              >
+              <label
+                ><input type="checkbox" id="defaultTechEncoding" checked />
+                Encoding Bypass</label
+              >
+              <label
+                ><input type="checkbox" id="defaultTechEndpoint" checked /> Alt
+                Endpoints</label
+              >
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button id="saveBypassSettings" class="btn btn-primary">
+            💾 Save Settings
+          </button>
+          <button id="resetBypassSettings" class="btn btn-danger btn-sm">
+            🔄 Reset to Default
+          </button>
+          <button id="cancelBypassSettings" class="btn btn-secondary">
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Import Cards Modal -->
+    <div id="importCardsModal" class="modal" style="display: none">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Import Payment Cards</h3>
+          <button class="modal-close" id="closeCardsModal">✕</button>
+        </div>
+        <div class="modal-body">
+          <p>Paste your card data here (format: number|MM/YY|CVC):</p>
+          <textarea
+            id="cardsInput"
+            rows="6"
+            placeholder="5598880392588168|06/32|004
+5598880392572030|11/31|157
+..."
+          ></textarea>
+          <div class="form-group">
+            <label>
+              <input type="checkbox" id="replaceCardsCheck" />
+              Replace existing cards (otherwise merge)
+            </label>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button id="confirmImportCardsBtn" class="btn btn-primary">
+            Import Cards
+          </button>
+          <button id="cancelImportCardsBtn" class="btn btn-secondary">
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Hidden File Inputs -->
+    <input
+      type="file"
+      id="downloadsFileInput"
+      multiple
+      accept=".json"
+      style="display: none"
+    />
+    <input
+      type="file"
+      id="folderInput"
+      webkitdirectory
+      multiple
+      style="display: none"
+    />
+    <input
+      id="cardsFileInput"
+      type="file"
+      accept=".md,.txt,.json"
+      multiple
+      style="display: none"
+    />
+
+    <!-- 🔧 EMERGENCY FIX: Foundation Services (Load First) -->
+    <script src="services/config.js"></script>
+    <script src="services/logger.js"></script>
+    <script src="services/input-validator.js"></script>
+
+    <!-- Core Architecture Services -->
+    <script src="services/error-handler.js"></script>
+    <script src="services/security-manager.js"></script>
+    <script src="services/threat-detector.js"></script>
+    <script src="services/compliance-manager.js"></script>
+    <script src="services/namespace-manager.js"></script>
+
+    <!-- Database Services (Required for Account/Payment) -->
+    <script src="services/database/base-database-service.js"></script>
+    <script src="services/database/connection-pool.js"></script>
+    <script src="services/database/query-optimizer.js"></script>
+    <script src="services/database/backup-recovery.js"></script>
+    <script src="services/database/accounts-database-service.js"></script>
+    <script src="services/database/cards-database-service.js"></script>
+    <script src="services/database/database-manager.js"></script>
+
+    <!-- Core Performance Services -->
+    <script src="services/lazy-loader.js"></script>
+    <script src="services/cache-service.js"></script>
+    <script src="services/dom-optimizer.js"></script>
+
+    <!-- Critical Services (Now with proper dependencies) -->
+    <script src="services/account.js"></script>
+    <script src="services/payment.js"></script>
+    <script src="sidepanel.js"></script>
+
+    <!-- Performance Integration -->
+    <script src="services/performance-monitor.js"></script>
+    <script src="services/performance-optimizer.js"></script>
+    <script src="services/performance-integration.js"></script>
+
+    <!-- Heavy modules will be lazy loaded when needed -->
+  </body>
+</html>

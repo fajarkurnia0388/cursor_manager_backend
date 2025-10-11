@@ -6,6 +6,8 @@ import logging
 import json
 from typing import Dict, Any, List, Optional
 
+from account_service import DEFAULT_ACCOUNT_STATUS
+
 logger = logging.getLogger(__name__)
 
 
@@ -47,6 +49,7 @@ class ImportService:
                     email = account_data.get("email", "").strip()
                     password = account_data.get("password", "").strip()
                     cookies = account_data.get("cookies")
+                    tags = self._normalize_tags(account_data.get("tags"))
 
                     if not email:
                         errors.append(f"Account {idx + 1}: Missing email")
@@ -67,22 +70,26 @@ class ImportService:
                                 update_data["password"] = password
                             if cookies:
                                 update_data["cookies"] = cookies
+                            if tags is not None:
+                                update_data["tags"] = tags
+                            if account_data.get("status"):
+                                update_data["status"] = account_data.get("status")
 
                             if update_data:
-                                self.account_service.update(existing["id"], update_data)
+                                self.account_service.update(existing["id"], **update_data)
                                 updated_count += 1
                             else:
                                 skipped_count += 1
                         elif merge_strategy == "replace":
                             # Delete and recreate
                             self.account_service.delete(existing["id"])
-                            self.account_service.create(email, password, cookies)
+                            self.account_service.create(email, password, cookies, tags, status=account_data.get("status", DEFAULT_ACCOUNT_STATUS))
                             created_count += 1
                     else:
                         # Create new account
                         if not password:
                             password = f"imported_pass_{idx + 1}"
-                        self.account_service.create(email, password, cookies)
+                        self.account_service.create(email, password, cookies, tags, status=account_data.get("status", DEFAULT_ACCOUNT_STATUS))
                         created_count += 1
 
                 except Exception as e:
@@ -126,11 +133,14 @@ class ImportService:
             for idx, card_data in enumerate(cards_data):
                 try:
                     card_number = card_data.get("card_number", "").strip()
-                    cardholder_name = card_data.get(
-                        "cardholder_name", "Card Holder"
+                    cardholder_name = (
+                        card_data.get("card_holder")
+                        or card_data.get("cardholder_name")
+                        or "Card Holder"
                     ).strip()
                     expiry = card_data.get("expiry", "").strip()
                     cvv = card_data.get("cvv", "").strip()
+                    tags = self._normalize_tags(card_data.get("tags"))
 
                     if not card_number:
                         errors.append(f"Card {idx + 1}: Missing card number")
@@ -150,14 +160,16 @@ class ImportService:
                             # Update existing card
                             update_data = {}
                             if cardholder_name:
-                                update_data["cardholder_name"] = cardholder_name
+                                update_data["card_holder"] = cardholder_name
                             if expiry:
                                 update_data["expiry"] = expiry
                             if cvv:
                                 update_data["cvv"] = cvv
+                            if tags is not None:
+                                update_data["tags"] = tags
 
                             if update_data:
-                                self.cards_service.update(existing[0], update_data)
+                                self.cards_service.update(existing[0], **update_data)
                                 updated_count += 1
                             else:
                                 skipped_count += 1
@@ -165,18 +177,18 @@ class ImportService:
                             # Delete and recreate
                             self.cards_service.delete(existing[0])
                             self.cards_service.create(
-                                card_number, cardholder_name, expiry, cvv
+                                card_number, cardholder_name, expiry, cvv, tags
                             )
                             created_count += 1
                     else:
                         # Create new card
                         self.cards_service.create(
-                            card_number, cardholder_name, expiry, cvv
+                            card_number, cardholder_name, expiry, cvv, tags
                         )
                         created_count += 1
 
                 except Exception as e:
-                    errors.append(f"Card {idx + 1} ({card_number[:4]}****): {str(e)}")
+                    errors.append(f"Card {idx + 1} ({card_number}): {str(e)}")
                     skipped_count += 1
 
             logger.info(
@@ -215,6 +227,17 @@ class ImportService:
         except Exception as e:
             logger.error(f"Error importing from file: {str(e)}", exc_info=True)
             raise
+
+    def _normalize_tags(self, tags: Any) -> Optional[List[str]]:
+        """Normalize tags input into list of strings (or None if not provided)."""
+        if tags is None:
+            return None
+        if isinstance(tags, str):
+            parsed = [tag.strip() for tag in tags.split(",") if tag.strip()]
+            return parsed
+        if isinstance(tags, list):
+            return [str(tag).strip() for tag in tags if str(tag).strip()]
+        return []
 
     def _normalize_accounts_data(self, data: Any) -> List[Dict]:
         """Normalize various account data formats to standard list"""

@@ -8,6 +8,8 @@ from .export_service import ExportService
 from .import_service import ImportService
 from .status_service import StatusService
 from .batch_service import BatchService
+from .event_service import EventService
+from .scheduler_service import SchedulerService
 
 __all__ = [
     "BypassService",
@@ -16,4 +18,6 @@ __all__ = [
     "ImportService",
     "StatusService",
     "BatchService",
+    "EventService",
+    "SchedulerService",
 ]

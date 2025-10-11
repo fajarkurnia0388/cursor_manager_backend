@@ -8,9 +8,10 @@ import struct
 import logging
 from typing import Dict, Any, Optional
 from pathlib import Path
+from datetime import datetime
 
 from database import Database
-from account_service import AccountService
+from account_service import AccountService, DEFAULT_ACCOUNT_STATUS
 from cards_service import CardsService
 from card_generator import CardGenerator
 from services.bypass_service import BypassService
@@ -19,6 +20,7 @@ from services.export_service import ExportService
 from services.import_service import ImportService
 from services.status_service import StatusService
 from services.batch_service import BatchService
+from services.event_service import EventService
 
 
 # Setup logging
@@ -37,9 +39,18 @@ class NativeHost:
 
     def __init__(self):
         """Initialize native host dengan database dan services"""
+        # Get origin from command-line argument for security validation
+        self.origin = sys.argv[1] if len(sys.argv) > 1 else None
+        logger.info(f"Native host started with origin: {self.origin}")
+        
+        # Validate origin matches expected extension pattern
+        if self.origin and not self.origin.startswith("chrome-extension://"):
+            logger.warning(f"Unexpected origin format: {self.origin}")
+        
         self.db = Database()
-        self.account_service = AccountService(self.db)
-        self.cards_service = CardsService(self.db)
+        self.event_service = EventService(self.db)
+        self.account_service = AccountService(self.db, self.event_service)
+        self.cards_service = CardsService(self.db, self.event_service)
         self.card_generator = CardGenerator()
 
         # Initialize new services
@@ -51,9 +62,11 @@ class NativeHost:
         self.import_service = ImportService(
             self.db, self.account_service, self.cards_service
         )
-        self.status_service = StatusService(self.db, self.account_service)
+        self.status_service = StatusService(
+            self.db, self.account_service, self.event_service
+        )
         self.batch_service = BatchService(
-            self.db, self.account_service, self.cards_service
+            self.db, self.account_service, self.cards_service, self.event_service
         )
 
         logger.info("Native host initialized with all services")
@@ -62,8 +75,27 @@ class NativeHost:
         """
         Send message ke Chrome extension
         Format: 4 bytes (message length) + JSON message
+        
+        Chrome limit: Maximum 1 MB for messages from native host to extension
         """
         encoded = json.dumps(message).encode("utf-8")
+        
+        # Enforce Chrome's 1 MB limit for messages TO extension
+        MAX_MESSAGE_SIZE = 1024 * 1024  # 1 MB
+        if len(encoded) > MAX_MESSAGE_SIZE:
+            error_msg = f"Message too large: {len(encoded)} bytes (max {MAX_MESSAGE_SIZE} bytes / 1 MB)"
+            logger.error(error_msg)
+            # Send error response instead
+            error_response = {
+                "jsonrpc": "2.0",
+                "id": message.get("id"),
+                "error": {
+                    "code": -32000,  # Server error
+                    "message": "Response payload exceeds 1 MB limit"
+                }
+            }
+            encoded = json.dumps(error_response).encode("utf-8")
+        
         sys.stdout.buffer.write(struct.pack("I", len(encoded)))
         sys.stdout.buffer.write(encoded)
         sys.stdout.buffer.flush()
@@ -72,6 +104,8 @@ class NativeHost:
         """
         Read message dari Chrome extension
         Format: 4 bytes (message length) + JSON message
+        
+        Chrome limit: Maximum 64 MB for messages from extension to native host
         """
         # Read message length (4 bytes)
         raw_length = sys.stdin.buffer.read(4)
@@ -79,6 +113,23 @@ class NativeHost:
             return None
 
         message_length = struct.unpack("I", raw_length)[0]
+        
+        # Enforce Chrome's 64 MB limit for messages FROM extension
+        MAX_MESSAGE_SIZE = 64 * 1024 * 1024  # 64 MB
+        if message_length > MAX_MESSAGE_SIZE:
+            error_msg = f"Incoming message too large: {message_length} bytes (max {MAX_MESSAGE_SIZE} bytes / 64 MB)"
+            logger.error(error_msg)
+            # Skip the oversized message
+            sys.stdin.buffer.read(message_length)
+            # Return error as if it was a malformed request
+            return {
+                "jsonrpc": "2.0",
+                "id": None,
+                "error": {
+                    "code": -32700,  # Parse error
+                    "message": "Message exceeds 64 MB limit"
+                }
+            }
 
         # Read message content
         message_bytes = sys.stdin.buffer.read(message_length)
@@ -131,6 +182,8 @@ class NativeHost:
                 result = self._handle_status(method, params)
             elif method.startswith("batch."):
                 result = self._handle_batch(method, params)
+            elif method.startswith("events."):
+                result = self._handle_events(method, params)
             elif method.startswith("system."):
                 result = self._handle_system(method, params)
             else:
@@ -167,9 +220,11 @@ class NativeHost:
 
         elif action == "create":
             email = params.get("email")
-            password = params.get("password")
+            password = params.get("password", "")
             cookies = params.get("cookies")
-            return self.account_service.create(email, password, cookies)
+            tags = params.get("tags")
+            status = params.get("status", DEFAULT_ACCOUNT_STATUS)
+            return self.account_service.create(email, password, cookies, tags, status)
 
         elif action == "update":
             account_id = params.get("id")
@@ -253,6 +308,19 @@ class NativeHost:
             return {
                 "version": __version__,
                 "schema_version": self.db.get_schema_version(),
+            }
+
+        elif action == "getCapabilities":
+            now = datetime.utcnow().isoformat() + "Z"
+            return {
+                "generated_at": now,
+                "schema_version": self.db.get_schema_version(),
+                "features": {
+                    "events": True,
+                    "batch": True,
+                    "status": True,
+                    "scheduler": False,
+                },
             }
 
         elif action == "backup":
@@ -486,6 +554,23 @@ class NativeHost:
 
         else:
             raise ValueError(f"Unknown batch action: {action}")
+
+    def _handle_events(self, method: str, params: Dict[str, Any]) -> Any:
+        """Handle sync event methods"""
+        action = method.split(".", 1)[1]
+
+        if action == "get":
+            after_id = params.get("after_id")
+            limit = params.get("limit", 200)
+            return self.event_service.get_events(after_id=after_id, limit=limit)
+
+        elif action == "prune":
+            keep_hours = params.get("keep_hours", 72)
+            deleted = self.event_service.prune(keep_hours=keep_hours)
+            return {"success": True, "deleted": deleted}
+
+        else:
+            raise ValueError(f"Unknown events action: {action}")
 
     def _validate_luhn(self, card_number: str) -> bool:
         """Validate card number using Luhn algorithm"""

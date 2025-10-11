@@ -1,4 +1,6 @@
-.cursor/
-output/
+extension/.cursor/
+extension/output/
+extension/result/
+extension/node_modules/
 branch/
 a

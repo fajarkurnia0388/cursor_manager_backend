@@ -3,8 +3,13 @@ Batch Service - Handle batch operations on accounts and cards
 """
 
 import logging
-from typing import Dict, Any, List
+from typing import Any, Dict, List, Optional, TYPE_CHECKING
 from datetime import datetime
+
+from account_service import DEFAULT_ACCOUNT_STATUS
+
+if TYPE_CHECKING:  # pragma: no cover
+    from services.event_service import EventService
 
 logger = logging.getLogger(__name__)
 
@@ -12,10 +17,17 @@ logger = logging.getLogger(__name__)
 class BatchService:
     """Service untuk batch operations"""
 
-    def __init__(self, db, account_service, cards_service):
+    def __init__(
+        self,
+        db,
+        account_service,
+        cards_service,
+        event_service: Optional["EventService"] = None,
+    ):
         self.db = db
         self.account_service = account_service
         self.cards_service = cards_service
+        self.event_service = event_service
         logger.info("BatchService initialized")
 
     def batch_create_accounts(
@@ -34,16 +46,18 @@ class BatchService:
 
             for idx, account_data in enumerate(accounts_data):
                 try:
-                    email = account_data.get("email", "").strip()
-                    password = account_data.get("password", "").strip()
+                    email = (account_data.get("email") or "").strip()
+                    password = (account_data.get("password") or "").strip()
                     cookies = account_data.get("cookies")
+                    tags = account_data.get("tags")
+                    status = account_data.get("status", DEFAULT_ACCOUNT_STATUS)
 
-                    if not email or not password:
+                    if not email and not cookies:
                         failed_count += 1
-                        errors.append(f"Account {idx + 1}: Missing email or password")
+                        errors.append(f"Account {idx + 1}: Missing email or cookies")
                         continue
 
-                    self.account_service.create(email, password, cookies)
+                    self.account_service.create(email, password, cookies, tags, status)
                     created_count += 1
 
                     # Update batch progress
@@ -65,7 +79,7 @@ class BatchService:
                 f"Batch create accounts: {created_count} created, {failed_count} failed"
             )
 
-            return {
+            result = {
                 "success": True,
                 "batch_id": batch_id,
                 "created": created_count,
@@ -73,6 +87,9 @@ class BatchService:
                 "errors": errors,
                 "total": len(accounts_data),
             }
+
+            self._emit_batch_event("create_accounts", result)
+            return result
 
         except Exception as e:
             logger.error(f"Error in batch create accounts: {str(e)}", exc_info=True)
@@ -110,7 +127,7 @@ class BatchService:
                 f"Batch delete accounts: {deleted_count} deleted, {failed_count} failed"
             )
 
-            return {
+            result = {
                 "success": True,
                 "batch_id": batch_id,
                 "deleted": deleted_count,
@@ -118,6 +135,8 @@ class BatchService:
                 "errors": errors,
                 "total": len(account_ids),
             }
+            self._emit_batch_event("delete_accounts", result)
+            return result
 
         except Exception as e:
             logger.error(f"Error in batch delete accounts: {str(e)}", exc_info=True)
@@ -157,7 +176,7 @@ class BatchService:
                 f"Batch update status: {updated_count} updated, {failed_count} failed"
             )
 
-            return {
+            result = {
                 "success": True,
                 "batch_id": batch_id,
                 "updated": updated_count,
@@ -165,6 +184,8 @@ class BatchService:
                 "errors": errors,
                 "total": len(account_ids),
             }
+            self._emit_batch_event("update_status", result)
+            return result
 
         except Exception as e:
             logger.error(f"Error in batch update status: {str(e)}", exc_info=True)
@@ -183,18 +204,29 @@ class BatchService:
             for idx, card_data in enumerate(cards_data):
                 try:
                     card_number = card_data.get("card_number", "").strip()
-                    cardholder_name = card_data.get(
-                        "cardholder_name", "Card Holder"
+                    cardholder_name = (
+                        card_data.get("card_holder")
+                        or card_data.get("cardholder_name")
+                        or "Card Holder"
                     ).strip()
                     expiry = card_data.get("expiry", "").strip()
                     cvv = card_data.get("cvv", "").strip()
+                    tags_raw = card_data.get("tags")
+                    if isinstance(tags_raw, str):
+                        tags = [tag.strip() for tag in tags_raw.split(",") if tag.strip()]
+                    elif isinstance(tags_raw, list):
+                        tags = [str(tag).strip() for tag in tags_raw if str(tag).strip()]
+                    else:
+                        tags = None
 
                     if not card_number:
                         failed_count += 1
                         errors.append(f"Card {idx + 1}: Missing card number")
                         continue
 
-                    self.cards_service.create(card_number, cardholder_name, expiry, cvv)
+                    self.cards_service.create(
+                        card_number, cardholder_name, expiry, cvv, tags
+                    )
                     created_count += 1
                     self._update_batch_progress(batch_id, created_count, failed_count)
 
@@ -214,7 +246,7 @@ class BatchService:
                 f"Batch create cards: {created_count} created, {failed_count} failed"
             )
 
-            return {
+            result = {
                 "success": True,
                 "batch_id": batch_id,
                 "created": created_count,
@@ -222,6 +254,8 @@ class BatchService:
                 "errors": errors,
                 "total": len(cards_data),
             }
+            self._emit_batch_event("create_cards", result)
+            return result
 
         except Exception as e:
             logger.error(f"Error in batch create cards: {str(e)}", exc_info=True)
@@ -332,3 +366,16 @@ class BatchService:
             WHERE id = ?
         """
         self.db.execute(query, (status, error_log, batch_id))
+
+    def _emit_batch_event(self, operation_type: str, payload: Dict[str, Any]) -> None:
+        if not self.event_service:
+            return
+        try:
+            self.event_service.record_event(
+                entity_type="batch",
+                action=operation_type,
+                entity_id=payload.get("batch_id"),
+                payload=payload,
+            )
+        except Exception as exc:  # pragma: no cover - defensive logging
+            logger.debug("Failed to record batch event %s: %s", operation_type, exc)

@@ -1,0 +1,87 @@
+---
+description: Cursor Manager Extension - Project-specific development rules
+globs:
+  - "extension/**/*"
+  - "backend/**/*"
+  - "*.md"
+alwaysApply: true
+---
+
+# Cursor Manager Extension - Project Rules
+
+## Project Overview
+
+This is a browser extension project with Python backend that manages accounts and payment cards. The project has a hybrid architecture with both extension and backend components.
+
+## File Structure Guidelines
+
+### Extension Files (`extension/`)
+
+- **Core Files**: `manifest.json`, `background.js`, `content.js`, `popup.js`, `sidepanel.js`
+- **Services**: All service modules in `services/` directory
+- **Modules**: Feature-specific modules in `modules/` directory
+- **Database**: SQLite schemas in `database/` directory
+- **Tests**: Test files in `tests/` directory
+
+### Backend Files (`backend/`)
+
+- **Core**: `native_host.py`, `database.py`, `account_service.py`
+- **Services**: Service modules in `services/` directory
+- **CLI**: `cli.py` for command-line interface
+- **GUI**: `gui.py` for graphical interface
+
+## Development Standards
+
+### JavaScript/Extension Code
+
+- Use modern ES6+ syntax
+- Follow async/await patterns for asynchronous operations
+- Implement proper error handling with try-catch blocks
+- Use meaningful variable and function names
+- Add JSDoc comments for complex functions
+
+### Python/Backend Code
+
+- Follow PEP 8 style guidelines
+- Use type hints where appropriate
+- Implement proper exception handling
+- Use logging instead of print statements
+- Follow the existing service pattern
+
+### Database Operations
+
+- Always use parameterized queries to prevent SQL injection
+- Implement proper transaction handling
+- Use the existing database service patterns
+- Follow the established schema conventions
+
+## Security Guidelines
+
+- Never hardcode sensitive information
+- Use environment variables for configuration
+- Implement proper input validation
+- Follow the existing security manager patterns
+- Use the threat detector for suspicious activities
+
+## Testing Requirements
+
+- Write tests for new features
+- Test both extension and backend components
+- Use the existing test patterns
+- Test database operations thoroughly
+- Test error handling scenarios
+
+## Documentation Standards
+
+- Update README files when adding new features
+- Document API changes in `API_REFERENCE.md`
+- Use clear, concise commit messages
+- Document breaking changes in `CHANGELOG.md`
+
+## Code Organization
+
+- Keep related functionality together
+- Use the existing module structure
+- Follow the established naming conventions
+- Implement proper separation of concerns
+- Use the existing service layer patterns

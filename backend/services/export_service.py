@@ -212,12 +212,14 @@ class ExportService:
 
         if accounts:
             # Define fields to export (exclude sensitive fields if needed)
-            fieldnames = ["id", "email", "created_at", "last_used", "status"]
+            fieldnames = ["id", "email", "status", "created_at", "last_used", "tags"]
             writer = csv.DictWriter(output, fieldnames=fieldnames)
             writer.writeheader()
 
             for account in accounts:
                 row = {field: account.get(field, "") for field in fieldnames}
+                if isinstance(account.get("tags"), list):
+                    row["tags"] = ", ".join(account["tags"])
                 writer.writerow(row)
 
         return output.getvalue()
@@ -230,9 +232,10 @@ class ExportService:
             fieldnames = [
                 "id",
                 "card_number",
-                "cardholder_name",
-                "expiry_display",
+                "card_holder",
+                "expiry",
                 "cvv",
+                "tags",
                 "created_at",
                 "last_used",
             ]
@@ -241,6 +244,8 @@ class ExportService:
 
             for card in cards:
                 row = {field: card.get(field, "") for field in fieldnames}
+                if isinstance(card.get("tags"), list):
+                    row["tags"] = ", ".join(card["tags"])
                 writer.writerow(row)
 
         return output.getvalue()

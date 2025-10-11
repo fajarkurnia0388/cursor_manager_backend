@@ -1,265 +1,201 @@
-# Cursor Manager Extension - Documentation
+# Cursor Manager - Dokumentasi Lengkap
 
-> **Architecture:** Backend-First dengan Python Native Host
-
-## 📋 Quick Start
-
-1. **[Backend-First Architecture](BACKEND_FIRST_ARCHITECTURE.md)** - Complete architecture dan migration plan
-2. **[Error Handling](ERROR_HANDLING.md)** - Error handling strategy
-3. **[Database Migration](DATABASE_MIGRATION.md)** - Database schema migration guide
-4. **[Logging Strategy](LOGGING_STRATEGY.md)** - Privacy-first logging
-5. **[Backend Control](BACKEND_CONTROL.md)** - Backend process control dari extension
-
-## 🏗️ Architecture Overview
-
-```
-┌─────────────────────────────────────────────────────────┐
-│                  Chrome Extension (UI)                   │
-│  ┌────────────┐  ┌────────────┐  ┌────────────────┐    │
-│  │  Sidepanel │  │  Background│  │  Content Script│    │
-│  └──────┬─────┘  └──────┬─────┘  └────────────────┘    │
-│         │                 │                              │
-│         └────────┬────────┘                              │
-│                  │ Native Messaging                      │
-└──────────────────┼───────────────────────────────────────┘
-                   │
-┌──────────────────┼───────────────────────────────────────┐
-│                  │ JSON-RPC 2.0                          │
-│         ┌────────▼────────┐                              │
-│         │  Native Host    │                              │
-│         │  (Python)       │                              │
-│         └────────┬────────┘                              │
-│                  │                                       │
-│      ┌───────────┴──────────────────────────┐          │
-│      │                                        │          │
-│  ┌───▼────┐  ┌──────────┐  ┌─────────────┐  │          │
-│  │Database│  │ Services │  │  GUI (tkinter)│  │         │
-│  │(SQLite)│  │          │  │               │  │         │
-│  └────────┘  └──────────┘  └─────────────┘  │         │
-│              - Accounts                       │         │
-│              - Cards                          │         │
-│              - Generator                      │         │
-│              - Bypass                         │         │
-│              - Pro Trial                      │         │
-│              - Export/Import                  │         │
-│                                               │         │
-│            Python Backend                     │         │
-└───────────────────────────────────────────────┘
-```
-
-## 📁 Repository Structure
-
-```
-cursor_manager_ext/
-├── README.md, README_IN.md          # Project documentation
-│
-├── backend/                          # Python backend (core logic)
-│   ├── __init__.py
-│   ├── database.py                   # SQLite database handler
-│   ├── native_host.py                # Native messaging host
-│   ├── cli.py                        # CLI interface
-│   ├── gui.py                        # Desktop GUI (tkinter)
-│   ├── account_service.py            # Account CRUD
-│   ├── cards_service.py              # Card CRUD
-│   ├── card_generator.py             # Card generation (Namso Gen)
-│   ├── install.py                    # Installer
-│   ├── requirements.txt              # Dependencies (none currently)
-│   └── README.md
-│
-├── services/                         # Extension services (thin client)
-│   ├── backend-service.js            # Native messaging client
-│   ├── backend-adapter.js            # Adapter with fallback
-│   ├── backend-ui.js                 # Backend UI components
-│   ├── migration-service.js          # Data migration
-│   └── ... (other services)
-│
-├── modules/bypass/                   # Bypass testing modules
-│
-├── docs/                             # Documentation
-│   ├── README.md                     # This file
-│   ├── BACKEND_FIRST_ARCHITECTURE.md # Main architecture doc
-│   ├── ERROR_HANDLING.md
-│   ├── DATABASE_MIGRATION.md
-│   ├── LOGGING_STRATEGY.md
-│   ├── BACKEND_CONTROL.md
-│   ├── INDEX.md                      # Documentation index
-│   └── archive/                      # Old/deprecated docs
-│
-├── manifest.json                     # Extension manifest
-├── sidepanel.html, sidepanel.js      # Extension UI
-├── background.js                     # Extension background script
-└── ... (other extension files)
-```
-
-## 🎯 Core Features
-
-### Backend (Python)
-
-- ✅ Account Management (CRUD)
-- ✅ Payment Cards (CRUD)
-- ✅ Card Generator (Namso Gen algorithm)
-- ✅ SQLite Database
-- ✅ Native Messaging Host
-- ✅ CLI Tools
-- ✅ Desktop GUI
-- 🚧 Bypass Testing Service
-- 🚧 Pro Trial Activation
-- 🚧 Export/Import Service
-- 🚧 Status Refresh Service
-
-### Extension (Chrome)
-
-- ✅ Native Messaging Client
-- ✅ Sidepanel UI
-- ✅ Background Script
-- ✅ Content Scripts
-- ✅ Auto-fill Functionality
-- ✅ Migration Service
-- 🚧 Backend Control UI
-- 🚧 Connection Status Indicator
-
-## 📚 Documentation Categories
-
-### 🏛️ Architecture
-
-- **[Backend-First Architecture](BACKEND_FIRST_ARCHITECTURE.md)** - Complete system design, migration plan, roadmap
-
-### 🔧 Technical Specifications
-
-- **[Error Handling](ERROR_HANDLING.md)** - Error categories, codes, handling strategy
-- **[Database Migration](DATABASE_MIGRATION.md)** - Schema versioning, safe migrations
-- **[Logging Strategy](LOGGING_STRATEGY.md)** - Privacy-first logging approach
-- **[Backend Control](BACKEND_CONTROL.md)** - Process management, auto-start
-
-### 📦 Archive
-
-- **[archive/old_architecture/](archive/old_architecture/)** - Deprecated architecture documents
-  - `NATIVE_MESSAGING_ARCHITECTURE.md`
-  - `SIMPLIFIED_NATIVE_ARCHITECTURE.md`
-  - `IMPLEMENTATION_GUIDE.md`
-  - `IMPLEMENTATION_CHECKLIST.md`
-  - `DECISION_MATRIX.md`
-
-## 🚀 Getting Started
-
-### Installation
-
-1. **Install Python Backend:**
-
-   ```bash
-   cd backend
-   python install.py
-   ```
-
-2. **Configure Extension ID:**
-
-   - Run `python gui.py`
-   - Go to Settings tab
-   - Add your extension ID
-   - Select target browsers
-   - Click "Save & Apply"
-
-3. **Load Extension:**
-
-   - Open `chrome://extensions/`
-   - Enable "Developer mode"
-   - Click "Load unpacked"
-   - Select extension directory
-   - Copy extension ID
-
-4. **Test Connection:**
-   - Open extension sidepanel
-   - Check connection status
-   - Click "Reconnect" if needed
-
-### Development
-
-**Backend Development:**
-
-```bash
-cd backend
-python -m backend.native_host  # Run host
-python cli.py --help           # CLI tools
-python gui.py                  # Desktop GUI
-```
-
-**Extension Development:**
-
-- Edit files
-- Reload extension
-- Check console for errors
-- Test features
-
-## 🧪 Testing
-
-```bash
-# Backend tests
-cd backend
-python -m pytest tests/
-
-# Extension tests
-# Open chrome://extensions
-# Click "Service Worker" to view logs
-```
-
-## 📝 Contributing
-
-1. Read [BACKEND_FIRST_ARCHITECTURE.md](BACKEND_FIRST_ARCHITECTURE.md)
-2. Check current roadmap
-3. Create feature branch
-4. Follow code style
-5. Add tests
-6. Update documentation
-7. Submit PR
-
-## 🔄 Migration from Old Architecture
-
-If you have data from the old Chrome Storage-based version:
-
-1. Extension will auto-detect old data
-2. Click "Migrate to Backend" button
-3. Confirm migration
-4. Wait for completion
-5. Verify data in backend
-6. Old data will be backed up
-
-## 📖 Additional Resources
-
-- **Backend README:** `backend/README.md`
-- **Extension README:** Root `README.md` and `README_IN.md`
-- **Bypass Modules:** `modules/bypass/README.md`
-
-## 🆘 Troubleshooting
-
-### Backend Not Connecting
-
-1. Check if `native_host.bat` exists in backend/
-2. Verify extension ID in manifest
-3. Check browser-specific manifest path
-4. View backend logs
-5. Run GUI diagnostics
-
-### Data Not Syncing
-
-1. Check backend is running
-2. Verify connection status
-3. Check browser console
-4. Check backend logs
-5. Try manual sync
-
-### Import Errors
-
-1. Validate JSON format
-2. Check for duplicates
-3. Review error messages
-4. Check backend logs
-
-## 📮 Contact
-
-- **Issues:** GitHub Issues
-- **Discussions:** GitHub Discussions
+**Version:** 4.0.0  
+**Last Updated:** 11 Oktober 2025  
+**Status:** ✅ Production Ready (Score: 8.5/10)
 
 ---
 
-**Last Updated:** 2025-10-04  
-**Version:** 2.0 (Backend-First Architecture)
+## 📚 Navigasi Cepat
+
+### Untuk Users
+- **[Installation Guide](guides/INSTALLATION_GUIDE.md)** - Cara install extension + backend
+- **[Usage Guide](guides/USAGE_GUIDE.md)** - Panduan penggunaan sehari-hari
+
+### Untuk Developers
+- **[Extension & Backend Connection](EXTENSION_BACKEND_CONNECTION.md)** - Arsitektur native messaging
+- **[API Reference](API_REFERENCE.md)** - Backend API endpoints lengkap
+- **[Distribution Plan](DISTRIBUTION_PLAN.md)** - Build executable untuk Windows/macOS/Linux
+
+### Planning & Roadmap
+- **[Improvement Plan](IMPROVEMENT_PLAN.md)** - Roadmap development
+- **[Improvement Status](IMPROVEMENT_PLAN_STATUS.md)** - Progress tracking (57% done)
+- **[Audit Report](AUDIT_REPORT.md)** - Chrome compliance & CustomTkinter audit
+
+---
+
+## 🗂️ Struktur Dokumentasi
+
+```
+docs/
+├── README.md (ini)                      # Index utama
+├── AUDIT_REPORT.md                      # Audit compliance (Oct 2025)
+├── API_REFERENCE.md                     # Backend API documentation
+├── DISTRIBUTION_PLAN.md                 # Executable packaging plan
+├── EXTENSION_BACKEND_CONNECTION.md      # Native messaging architecture
+├── IMPROVEMENT_PLAN.md                  # Development roadmap
+├── IMPROVEMENT_PLAN_STATUS.md           # Progress tracking
+│
+├── guides/                              # User guides
+│   ├── INSTALLATION_GUIDE.md            # Setup instructions
+│   └── USAGE_GUIDE.md                   # User manual
+│
+├── architecture/                        # Technical architecture
+│   └── HYBRID_ARCHITECTURE.md           # Extension + Backend design
+│
+├── development/                         # Developer docs
+│   ├── DATABASE_MIGRATION.md            # Database schema evolution
+│   ├── ERROR_HANDLING.md                # Error handling strategy
+│   └── LOGGING_STRATEGY.md              # Logging implementation
+│
+└── archive/                             # Obsolete/historical docs
+    ├── PROJECT_AUDIT_2025-10-04.md      # Old audit (superseded)
+    ├── BACKEND_FIRST_ARCHITECTURE.md    # Old architecture
+    ├── BACKEND_CONTROL.md               # Old control doc
+    ├── DOCUMENTATION_EVALUATION.md      # Old evaluation
+    ├── ENHANCEMENT_ROADMAP.md           # Old roadmap
+    └── PROJECT_STATUS.md                # Old status
+```
+
+---
+
+## 📖 Dokumentasi Utama
+
+### 1. EXTENSION_BACKEND_CONNECTION.md
+**What:** Penjelasan lengkap bagaimana Chrome extension berkomunikasi dengan Python backend via Native Messaging  
+**Key Topics:**
+- Native Messaging protocol (stdio, JSON-RPC 2.0)
+- Message framing (4-byte length + JSON payload)
+- Manifest configuration & registry registration
+- Security & validation
+
+**Audience:** Developers yang perlu understand atau modify komunikasi layer
+
+---
+
+### 2. API_REFERENCE.md  
+**What:** Complete reference untuk semua backend API endpoints  
+**Format:** JSON-RPC 2.0 over Native Messaging  
+**Sections:**
+- Account methods (`accounts.*`)
+- Card methods (`cards.*`)
+- System methods (`system.*`)
+- Bypass/ProTrial/Export/Import/Batch methods
+
+**Audience:** Extension developers yang perlu call backend
+
+---
+
+### 3. DISTRIBUTION_PLAN.md
+**What:** Comprehensive plan untuk build portable executables  
+**Platforms:** Windows (.exe), macOS (.app), Linux (AppImage)  
+**Tool:** PyInstaller + platform-specific packaging  
+**Timeline:** 4-6 weeks implementation  
+**Status:** 🔄 Planning phase
+
+**Audience:** Release engineers, CI/CD maintainers
+
+---
+
+### 4. IMPROVEMENT_PLAN.md + IMPROVEMENT_PLAN_STATUS.md
+**What:** Roadmap development & progress tracking  
+**Progress:** 57% done (20/35 items)  
+**Completed:** Scheduler, theme toggle, native messaging fixes  
+**In Progress:** Windows testing, PyInstaller bundling  
+**Planned:** Registry registration, unit tests, CI/CD
+
+**Audience:** Project managers, developers planning sprints
+
+---
+
+### 5. AUDIT_REPORT.md  
+**What:** Comprehensive audit Chrome Native Messaging & CustomTkinter compliance  
+**Score:** 8.5/10 (Production Ready)  
+**Date:** 11 Oktober 2025  
+**Key Findings:**
+- Native messaging: 9/10 (Excellent)
+- JSON-RPC 2.0: 10/10 (Perfect)
+- CustomTkinter: 8.5/10 (Very Good)
+- Security: 8/10 (Good)
+
+**Critical fixes implemented:**
+✅ Windows batch wrapper  
+✅ Message size limits (1MB/64MB)  
+✅ Origin validation
+
+**Audience:** Technical leads, quality assurance
+
+---
+
+## 🚀 Quick Start
+
+### For Users
+1. Read [Installation Guide](guides/INSTALLATION_GUIDE.md)
+2. Follow step-by-step setup
+3. Refer to [Usage Guide](guides/USAGE_GUIDE.md) for features
+
+### For Developers
+1. Understand architecture: [EXTENSION_BACKEND_CONNECTION.md](EXTENSION_BACKEND_CONNECTION.md)
+2. Check API docs: [API_REFERENCE.md](API_REFERENCE.md)
+3. Review improvement plan: [IMPROVEMENT_PLAN.md](IMPROVEMENT_PLAN.md)
+4. Contribute following [Development docs](development/)
+
+---
+
+## 📦 Components Documentation
+
+| Component | Location | Documentation |
+|-----------|----------|---------------|
+| **Chrome Extension** | `extension/` | `extension/README.md`, `extension/CHANGELOG.md` |
+| **Python Backend** | `backend/` | `backend/README.md`, `docs/API_REFERENCE.md` |
+| **Desktop GUI** | `backend/gui.py` | `docs/guides/USAGE_GUIDE.md` |
+| **Native Host** | `backend/native_host.py` | `docs/EXTENSION_BACKEND_CONNECTION.md` |
+| **Services** | `backend/services/` | `docs/API_REFERENCE.md` (per-service) |
+
+---
+
+## 🔄 Documentation Changelog
+
+### 2025-10-11 - Major Reorganization
+- ✅ Created clean `docs/` structure
+- ✅ Moved all relevant docs from root & backend
+- ✅ Organized by category (guides, architecture, development)
+- ✅ Archived obsolete documents
+- ✅ Created this index
+
+### Previous
+- Scattered docs across root, backend/, extension/docs/
+- Multiple overlapping/outdated files
+- No clear index or navigation
+
+---
+
+## 🎯 Documentation Standards
+
+### File Naming
+- Use SCREAMING_SNAKE_CASE for docs: `INSTALLATION_GUIDE.md`
+- Be descriptive: `DATABASE_MIGRATION.md` not `DB.md`
+
+### Structure
+- Start with H1 title
+- Include table of contents for long docs
+- Use code blocks with language tags
+- Include examples where relevant
+
+### Updates
+- Update `Last Updated` date when modifying
+- Add entry to this README's changelog section
+- Archive old versions if major rewrite
+
+---
+
+## 📧 Contact & Support
+
+- **Issues:** GitHub Issues (link TBD)
+- **Discussions:** GitHub Discussions (link TBD)
+- **Email:** (TBD)
+
+---
+
+**Note:** Dokumentasi ini terus berkembang. Untuk suggest improvements atau report errors, create an issue atau submit PR.
+

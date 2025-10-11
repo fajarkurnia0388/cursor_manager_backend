@@ -9,9 +9,21 @@ from pathlib import Path
 from typing import Optional
 
 from database import Database
-from account_service import AccountService
+from account_service import AccountService, DEFAULT_ACCOUNT_STATUS
 from cards_service import CardsService
 from __init__ import __version__
+
+ACCOUNT_STATUS_CHOICES = [
+    "free",
+    "pro-trial",
+    "pro",
+    "pro+ plan",
+    "ultra",
+    "teams",
+    "limit pro-trial",
+    "limit pro",
+]
+DELETED_ACCOUNT_STATUS = "deleted"
 
 
 def format_table(headers, rows):
@@ -93,7 +105,11 @@ class CLI:
             print(json.dumps(account["cookies"], indent=2))
 
     def accounts_create(
-        self, email: str, password: str, cookies_file: Optional[str] = None
+        self,
+        email: str,
+        password: str = "",
+        cookies_file: Optional[str] = None,
+        status: str = DEFAULT_ACCOUNT_STATUS,
     ):
         """Create new account"""
         cookies = None
@@ -101,7 +117,12 @@ class CLI:
             with open(cookies_file) as f:
                 cookies = json.load(f)
 
-        account = self.account_service.create(email, password, cookies)
+        account = self.account_service.create(
+            email,
+            password,
+            cookies,
+            status=status,
+        )
         print(f"Account created with ID: {account['id']}")
 
     def accounts_delete(self, account_id: int, permanent: bool = False):
@@ -118,10 +139,12 @@ class CLI:
         imported = 0
         for item in data:
             try:
+                status = item.get("status", DEFAULT_ACCOUNT_STATUS)
                 self.account_service.create(
-                    email=item["email"],
-                    password=item["password"],
+                    email=item.get("email"),
+                    password=item.get("password", ""),
                     cookies=item.get("cookies"),
+                    status=status,
                 )
                 imported += 1
             except Exception as e:
@@ -144,9 +167,10 @@ class CLI:
 
         print("Account Statistics:")
         print(f"  Total: {stats.get('total', 0)}")
-        print(f"  Active: {stats.get('active', 0)}")
-        print(f"  Inactive: {stats.get('inactive', 0)}")
-        print(f"  Deleted: {stats.get('deleted', 0)}")
+        for status in ACCOUNT_STATUS_CHOICES:
+            label = status.replace("limit ", "Limit ").title()
+            print(f"  {label}: {stats.get(status, 0)}")
+        print(f"  Deleted: {stats.get(DELETED_ACCOUNT_STATUS, 0)}")
 
     def cards_list(self, status: Optional[str] = None):
         """List all cards"""
@@ -241,7 +265,7 @@ def main():
     accounts_sub = accounts_parser.add_subparsers(dest="action")
 
     accounts_sub.add_parser("list", help="List accounts").add_argument(
-        "--status", choices=["active", "inactive", "deleted"]
+        "--status", choices=ACCOUNT_STATUS_CHOICES + [DELETED_ACCOUNT_STATUS]
     )
     accounts_sub.add_parser("show", help="Show account details").add_argument(
         "id", type=int
@@ -249,8 +273,9 @@ def main():
 
     create_acc = accounts_sub.add_parser("create", help="Create account")
     create_acc.add_argument("email")
-    create_acc.add_argument("password")
+    create_acc.add_argument("password", nargs="?", default="")
     create_acc.add_argument("--cookies", help="Path to cookies JSON file")
+    create_acc.add_argument("--status", choices=ACCOUNT_STATUS_CHOICES, default=DEFAULT_ACCOUNT_STATUS)
 
     delete_acc = accounts_sub.add_parser("delete", help="Delete account")
     delete_acc.add_argument("id", type=int)
@@ -260,7 +285,7 @@ def main():
 
     export_acc = accounts_sub.add_parser("export", help="Export to JSON")
     export_acc.add_argument("file")
-    export_acc.add_argument("--status", choices=["active", "inactive", "deleted"])
+    export_acc.add_argument("--status", choices=ACCOUNT_STATUS_CHOICES + [DELETED_ACCOUNT_STATUS])
 
     accounts_sub.add_parser("stats", help="Show statistics")
 
@@ -311,7 +336,7 @@ def main():
             elif args.action == "show":
                 cli.accounts_show(args.id)
             elif args.action == "create":
-                cli.accounts_create(args.email, args.password, args.cookies)
+                cli.accounts_create(args.email, args.password, args.cookies, args.status)
             elif args.action == "delete":
                 cli.accounts_delete(args.id, args.permanent)
             elif args.action == "import":

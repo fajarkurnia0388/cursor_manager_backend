@@ -18,6 +18,7 @@
 - [Import Methods](#import-methods)
 - [Status Methods](#status-methods)
 - [Batch Operations](#batch-operations)
+- [Events Methods](#events-methods)
 
 ---
 
@@ -100,7 +101,36 @@ Get backend version information.
   "id": 1,
   "result": {
     "version": "2.0.0",
-    "schema_version": 2
+    "schema_version": 4
+  }
+}
+```
+
+### system.getCapabilities
+
+Return the feature flags exposed by the backend.
+
+**Request:**
+
+```json
+{ "jsonrpc": "2.0", "id": 1, "method": "system.getCapabilities", "params": {} }
+```
+
+**Response:**
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "generated_at": "2025-10-11T04:29:00Z",
+    "schema_version": 4,
+    "features": {
+      "events": true,
+      "batch": true,
+      "status": true,
+      "scheduler": false
+    }
   }
 }
 ```
@@ -520,6 +550,65 @@ Get batch operation history.
 **Params:**
 
 - `limit` (optional, default: 20): Max results
+
+---
+
+## Events Methods
+
+### events.get
+
+Fetch recent synchronization events recorded by the backend.
+
+**Params:**
+
+- `after_id` (optional): Return events with an ID greater than this value.
+- `limit` (optional, default: 200): Maximum number of events to return.
+
+**Response:**
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "events": [
+      {
+        "id": 42,
+        "entity_type": "account",
+        "entity_id": 10,
+        "action": "updated",
+        "source": "backend",
+        "payload": {
+          "status": "active"
+        },
+        "created_at": "2025-10-11T03:59:00Z"
+      }
+    ],
+    "last_id": 42
+  }
+}
+```
+
+### events.prune
+
+Delete events older than a retention threshold.
+
+**Params:**
+
+- `keep_hours` (optional, default: 72): Retention window in hours.
+
+**Response:**
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "success": true,
+    "deleted": 120
+  }
+}
+```
 
 ---
 

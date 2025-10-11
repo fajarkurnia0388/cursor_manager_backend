@@ -15,7 +15,7 @@ class Database:
     """SQLite database handler dengan connection pooling sederhana"""
 
     # Schema version untuk migration tracking
-    SCHEMA_VERSION = 2
+    SCHEMA_VERSION = 4
 
     def __init__(self, db_path: Optional[str] = None):
         """
@@ -74,6 +74,7 @@ class Database:
                 email TEXT UNIQUE NOT NULL,
                 password TEXT NOT NULL,
                 cookies TEXT,
+                tags TEXT DEFAULT '[]',
                 status TEXT DEFAULT 'active',
                 last_used TIMESTAMP,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -91,6 +92,7 @@ class Database:
                 card_holder TEXT NOT NULL,
                 expiry TEXT NOT NULL,
                 cvv TEXT NOT NULL,
+                tags TEXT DEFAULT '[]',
                 status TEXT DEFAULT 'active',
                 last_used TIMESTAMP,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -109,6 +111,21 @@ class Database:
                 test_payload TEXT NOT NULL,
                 target_url TEXT NOT NULL,
                 status TEXT DEFAULT 'pending',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """
+        )
+
+        # Sync events table (for realtime syncing between desktop and extension)
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS sync_events (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                entity_type TEXT NOT NULL,
+                entity_id INTEGER,
+                action TEXT NOT NULL,
+                source TEXT DEFAULT 'backend',
+                payload TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """
@@ -194,12 +211,19 @@ class Database:
         cursor.execute(
             "CREATE INDEX IF NOT EXISTS idx_batch_operations_status ON batch_operations(status)"
         )
+        cursor.execute(
+            "CREATE INDEX IF NOT EXISTS idx_sync_events_created_at ON sync_events(created_at)"
+        )
 
         # Set schema version
         cursor.execute(
             "INSERT OR REPLACE INTO _metadata (key, value) VALUES (?, ?)",
             ("schema_version", str(self.SCHEMA_VERSION)),
         )
+
+        # Ensure new columns exist for legacy databases
+        self._ensure_column(cursor, "accounts", "tags", "TEXT DEFAULT '[]'")
+        self._ensure_column(cursor, "cards", "tags", "TEXT DEFAULT '[]'")
 
         conn.commit()
 
@@ -289,3 +313,20 @@ class Database:
             # Rollback jika gagal
             shutil.copy2(current_backup, self.db_path)
             raise e
+
+    def _ensure_column(
+        self, cursor: sqlite3.Cursor, table: str, column: str, definition: str
+    ):
+        """
+        Ensure a column exists in a table (legacy migration helper).
+
+        Args:
+            cursor: Active database cursor
+            table: Table name
+            column: Column name to check
+            definition: Column definition used when adding
+        """
+        cursor.execute(f"PRAGMA table_info({table})")
+        columns = [row["name"] if isinstance(row, sqlite3.Row) else row[1] for row in cursor.fetchall()]
+        if column not in columns:
+            cursor.execute(f"ALTER TABLE {table} ADD COLUMN {column} {definition}")

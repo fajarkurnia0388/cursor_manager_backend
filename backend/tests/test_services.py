@@ -5,6 +5,7 @@ Comprehensive test suite for backend services
 import unittest
 import sys
 import os
+import json
 from pathlib import Path
 
 # Add parent directory to path
@@ -36,7 +37,7 @@ class TestDatabase(unittest.TestCase):
     def test_schema_version(self):
         """Test schema version"""
         version = self.db.get_schema_version()
-        self.assertEqual(version, 2)
+        self.assertEqual(version, self.db.SCHEMA_VERSION)
 
     def test_tables_exist(self):
         """Test all tables exist"""
@@ -48,6 +49,7 @@ class TestDatabase(unittest.TestCase):
             "bypass_results",
             "pro_trials",
             "batch_operations",
+            "sync_events",
         ]
 
         for table in tables:
@@ -72,10 +74,13 @@ class TestAccountService(unittest.TestCase):
 
     def test_create_account(self):
         """Test create account"""
-        result = self.service.create("test@example.com", "password123")
+        result = self.service.create(
+            "test@example.com", "password123", tags=["vip", "beta"]
+        )
         self.assertIsNotNone(result)
         self.assertIn("id", result)
         self.assertEqual(result["email"], "test@example.com")
+        self.assertEqual(result.get("tags"), ["vip", "beta"])
 
     def test_get_account(self):
         """Test get account"""
@@ -89,11 +94,14 @@ class TestAccountService(unittest.TestCase):
         """Test update account"""
         result = self.service.create("test@example.com", "password123")
         account_id = result["id"]
-        update_result = self.service.update(account_id, status="inactive")
+        update_result = self.service.update(
+            account_id, status="limit pro", tags=["premium"]
+        )
         self.assertIsNotNone(update_result)
 
         account = self.service.get_by_id(account_id)
-        self.assertEqual(account["status"], "inactive")
+        self.assertEqual(account["status"], "limit pro")
+        self.assertEqual(account["tags"], ["premium"])
 
     def test_delete_account(self):
         """Test delete account"""
@@ -120,10 +128,13 @@ class TestCardsService(unittest.TestCase):
 
     def test_create_card(self):
         """Test create card"""
-        result = self.service.create("4532123456789012", "John Doe", "12/25", "123")
+        result = self.service.create(
+            "4532123456789012", "John Doe", "12/25", "123", tags=["primary"]
+        )
         self.assertIsNotNone(result)
         self.assertIn("id", result)
         self.assertEqual(result["card_holder"], "John Doe")
+        self.assertEqual(result["tags"], ["primary"])
 
     def test_get_card(self):
         """Test get card"""
@@ -132,6 +143,16 @@ class TestCardsService(unittest.TestCase):
         card = self.service.get_by_id(card_id)
         self.assertIsNotNone(card)
         self.assertEqual(card["card_holder"], "John Doe")
+        self.assertEqual(card["tags"], [])
+
+    def test_update_card_tags(self):
+        """Test updating card tags"""
+        result = self.service.create("4532123456789012", "John Doe", "12/25", "123")
+        card_id = result["id"]
+        updated = self.service.update(card_id, tags=["spare", "backup"])
+        self.assertIsNotNone(updated)
+        card = self.service.get_by_id(card_id)
+        self.assertEqual(card["tags"], ["spare", "backup"])
 
 
 class TestCardGenerator(unittest.TestCase):
@@ -285,24 +306,40 @@ class TestExportImportService(unittest.TestCase):
     def test_export_accounts_json(self):
         """Test export accounts to JSON"""
         # Create test data
-        self.account_service.create("test1@example.com", "password1")
-        self.account_service.create("test2@example.com", "password2")
+        self.account_service.create(
+            "test1@example.com", "password1", tags=["alpha"]
+        )
+        self.account_service.create(
+            "test2@example.com", "password2", tags=["beta", "team"]
+        )
 
         result = self.export_service.export_accounts("json")
         self.assertTrue(result.get("success"))
         self.assertGreaterEqual(result["count"], 2)
         self.assertIn("data", result)
+        exported_accounts = json.loads(result["data"])
+        self.assertTrue(any(acc.get("tags") for acc in exported_accounts))
 
     def test_import_accounts(self):
         """Test import accounts"""
         import_data = [
-            {"email": "import1@example.com", "password": "pass1"},
-            {"email": "import2@example.com", "password": "pass2"},
+            {
+                "email": "import1@example.com",
+                "password": "pass1",
+                "tags": ["vip"],
+            },
+            {
+                "email": "import2@example.com",
+                "password": "pass2",
+                "tags": "beta, trial",
+            },
         ]
 
         result = self.import_service.import_accounts(import_data)
         self.assertTrue(result.get("success"))
         self.assertEqual(result["created"], 2)
+        account = self.account_service.get_by_email("import1@example.com")
+        self.assertEqual(account.get("tags"), ["vip"])
 
 
 class TestBatchService(unittest.TestCase):

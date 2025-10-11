@@ -14,29 +14,145 @@ class Installer:
     """Installer untuk native messaging host"""
 
     # Extension ID (ganti dengan ID extension yang sebenarnya)
-    EXTENSION_ID = "your_extension_id_here"
+    EXTENSION_ID = "ddckkemmcamldfngbkjjbhfblnkgcpfe"
     HOST_NAME = "com.cursor.manager"
 
     def __init__(self):
         self.system = platform.system()
         self.backend_dir = Path(__file__).parent.absolute()
+        self.install_dir = Path.home() / "cursor_manager"
 
+        # Define browser configurations
+        self.browsers = {
+            "chrome": {
+                "windows": Path(os.getenv("APPDATA"))
+                / r"Google\Chrome\NativeMessagingHosts",
+                "macos": Path.home()
+                / "Library/Application Support/Google/Chrome/NativeMessagingHosts",
+                "linux": Path.home() / ".config/google-chrome/NativeMessagingHosts",
+            },
+            "edge": {
+                "windows": Path(os.getenv("APPDATA"))
+                / r"Microsoft\Edge\NativeMessagingHosts",
+                "macos": Path.home()
+                / "Library/Application Support/Microsoft Edge/NativeMessagingHosts",
+                "linux": Path.home() / ".config/microsoft-edge/NativeMessagingHosts",
+            },
+            "brave": {
+                "windows": Path(os.getenv("APPDATA"))
+                / r"BraveSoftware\Brave-Browser\NativeMessagingHosts",
+                "macos": Path.home()
+                / "Library/Application Support/BraveSoftware/Brave-Browser/NativeMessagingHosts",
+                "linux": Path.home()
+                / ".config/BraveSoftware/Brave-Browser/NativeMessagingHosts",
+            },
+            "firefox": {
+                "windows": Path(os.getenv("APPDATA")) / r"Mozilla\NativeMessagingHosts",
+                "macos": Path.home()
+                / "Library/Application Support/Mozilla/NativeMessagingHosts",
+                "linux": Path.home() / ".mozilla/native-messaging-hosts",
+            },
+            "opera": {
+                "windows": Path(os.getenv("APPDATA"))
+                / r"Opera Software\Opera Stable\NativeMessagingHosts",
+                "macos": Path.home()
+                / "Library/Application Support/com.operasoftware.Opera/NativeMessagingHosts",
+                "linux": Path.home() / ".config/opera/NativeMessagingHosts",
+            },
+        }
+
+        # Detect available browsers
+        self.available_browsers = self._detect_available_browsers()
+
+    def _detect_available_browsers(self):
+        """Detect which browsers are available on the system"""
+        available = []
+
+        for browser_name, paths in self.browsers.items():
+            if self.system.lower() in paths:
+                manifest_dir = paths[self.system.lower()]
+
+                # Check if browser is installed by looking for common browser directories
+                if self._is_browser_installed(browser_name):
+                    available.append(
+                        {
+                            "name": browser_name,
+                            "manifest_dir": manifest_dir,
+                            "display_name": browser_name.title(),
+                        }
+                    )
+
+        return available
+
+    def _is_browser_installed(self, browser_name):
+        """Check if a specific browser is installed"""
         if self.system == "Windows":
-            self.install_dir = Path.home() / "cursor_manager"
-            self.manifest_dir = (
-                Path(os.getenv("APPDATA")) / r"Google\Chrome\NativeMessagingHosts"
-            )
+            # Check for browser installation in common locations
+            browser_paths = {
+                "chrome": [
+                    Path(os.getenv("PROGRAMFILES")) / "Google/Chrome/Application",
+                    Path(os.getenv("PROGRAMFILES(X86)")) / "Google/Chrome/Application",
+                    Path(os.getenv("LOCALAPPDATA")) / "Google/Chrome/Application",
+                ],
+                "edge": [
+                    Path(os.getenv("PROGRAMFILES(X86)")) / "Microsoft/Edge/Application",
+                    Path(os.getenv("LOCALAPPDATA")) / "Microsoft/Edge/Application",
+                ],
+                "brave": [
+                    Path(os.getenv("PROGRAMFILES"))
+                    / "BraveSoftware/Brave-Browser/Application",
+                    Path(os.getenv("PROGRAMFILES(X86)"))
+                    / "BraveSoftware/Brave-Browser/Application",
+                    Path(os.getenv("LOCALAPPDATA"))
+                    / "BraveSoftware/Brave-Browser/Application",
+                ],
+                "firefox": [
+                    Path(os.getenv("PROGRAMFILES")) / "Mozilla Firefox",
+                    Path(os.getenv("PROGRAMFILES(X86)")) / "Mozilla Firefox",
+                    Path(os.getenv("LOCALAPPDATA")) / "Mozilla Firefox",
+                ],
+                "opera": [
+                    Path(os.getenv("PROGRAMFILES")) / "Opera",
+                    Path(os.getenv("PROGRAMFILES(X86)")) / "Opera",
+                    Path(os.getenv("LOCALAPPDATA")) / "Opera Software/Opera",
+                ],
+            }
+
+            if browser_name in browser_paths:
+                for path in browser_paths[browser_name]:
+                    if path.exists():
+                        return True
+
         elif self.system == "Darwin":  # macOS
-            self.install_dir = Path.home() / "cursor_manager"
-            self.manifest_dir = (
-                Path.home()
-                / "Library/Application Support/Google/Chrome/NativeMessagingHosts"
-            )
+            browser_paths = {
+                "chrome": Path("/Applications/Google Chrome.app"),
+                "edge": Path("/Applications/Microsoft Edge.app"),
+                "brave": Path("/Applications/Brave Browser.app"),
+                "firefox": Path("/Applications/Firefox.app"),
+                "opera": Path("/Applications/Opera.app"),
+            }
+
+            if browser_name in browser_paths:
+                return browser_paths[browser_name].exists()
+
         else:  # Linux
-            self.install_dir = Path.home() / "cursor_manager"
-            self.manifest_dir = (
-                Path.home() / ".config/google-chrome/NativeMessagingHosts"
-            )
+            # Check for browser executables in PATH
+            import shutil
+
+            browser_executables = {
+                "chrome": ["google-chrome", "google-chrome-stable", "chromium"],
+                "edge": ["microsoft-edge", "microsoft-edge-stable"],
+                "brave": ["brave-browser", "brave"],
+                "firefox": ["firefox"],
+                "opera": ["opera"],
+            }
+
+            if browser_name in browser_executables:
+                for exe in browser_executables[browser_name]:
+                    if shutil.which(exe):
+                        return True
+
+        return False
 
     def install(self):
         """Install native messaging host"""
@@ -45,16 +161,26 @@ class Installer:
         print("=" * 60)
         print()
 
+        # Show detected browsers
+        if self.available_browsers:
+            print("Detected browsers:")
+            for browser in self.available_browsers:
+                print(f"  ✓ {browser['display_name']}")
+            print()
+        else:
+            print("⚠️  No supported browsers detected!")
+            print("Supported browsers: Chrome, Edge, Brave, Firefox, Opera")
+            print()
+
         # Step 1: Copy backend files
         print("Step 1: Installing backend files...")
         self._copy_backend_files()
         print(f"✓ Backend installed to: {self.install_dir}")
         print()
 
-        # Step 2: Create manifest file
-        print("Step 2: Creating native messaging manifest...")
-        self._create_manifest()
-        print(f"✓ Manifest created at: {self.manifest_dir}")
+        # Step 2: Create manifest files
+        print("Step 2: Creating native messaging manifests...")
+        self._create_manifests()
         print()
 
         # Step 3: Create shortcuts (Windows only)
@@ -110,20 +236,20 @@ class Installer:
             if src.exists():
                 shutil.copy2(src, dst)
 
-    def _create_manifest(self):
-        """Create native messaging manifest file"""
-        self.manifest_dir.mkdir(parents=True, exist_ok=True)
-
+    def _create_manifests(self):
+        """Create native messaging manifest files for all detected browsers"""
         if self.system == "Windows":
-            # Windows: path must use forward slashes or escaped backslashes
-            native_host_path = str(self.install_dir / "native_host.py").replace(
-                "\\", "/"
-            )
-            command = [sys.executable, native_host_path]  # Python interpreter path
+            # Windows: Create batch wrapper for Python script
+            # Chrome requires path to point to executable, not .py file
+            bat_wrapper = self.install_dir / "native_host.bat"
+            bat_content = f'@echo off\r\n"{sys.executable}" "{self.install_dir / "native_host.py"}" %*\r\n'
+            with open(bat_wrapper, 'w') as f:
+                f.write(bat_content)
+            
+            native_host_path = str(bat_wrapper).replace("\\", "/")
         else:
-            # macOS/Linux
+            # macOS/Linux: script with shebang works directly
             native_host_path = str(self.install_dir / "native_host.py")
-            command = [sys.executable, native_host_path]
 
         manifest = {
             "name": self.HOST_NAME,
@@ -133,9 +259,21 @@ class Installer:
             "allowed_origins": [f"chrome-extension://{self.EXTENSION_ID}/"],
         }
 
-        manifest_file = self.manifest_dir / f"{self.HOST_NAME}.json"
-        with open(manifest_file, "w") as f:
-            json.dump(manifest, f, indent=2)
+        # Create manifests only for detected browsers
+        if self.available_browsers:
+            for browser in self.available_browsers:
+                try:
+                    browser["manifest_dir"].mkdir(parents=True, exist_ok=True)
+                    manifest_file = browser["manifest_dir"] / f"{self.HOST_NAME}.json"
+                    with open(manifest_file, "w") as f:
+                        json.dump(manifest, f, indent=2)
+                    print(
+                        f"✓ {browser['display_name']} manifest created at: {browser['manifest_dir']}"
+                    )
+                except Exception as e:
+                    print(f"✗ Failed to create {browser['display_name']} manifest: {e}")
+        else:
+            print("⚠️  No browsers detected, skipping manifest creation")
 
         # On Unix systems, make the host executable
         if self.system != "Windows":
@@ -172,10 +310,17 @@ class Installer:
                     print(f"Missing file: {file}")
                     return False
 
-            # Check if manifest exists
-            manifest_file = self.manifest_dir / f"{self.HOST_NAME}.json"
-            if not manifest_file.exists():
-                print(f"Manifest file not found: {manifest_file}")
+            # Check if any manifest exists
+            manifest_found = False
+            if self.available_browsers:
+                for browser in self.available_browsers:
+                    manifest_file = browser["manifest_dir"] / f"{self.HOST_NAME}.json"
+                    if manifest_file.exists():
+                        manifest_found = True
+                        break
+
+            if not manifest_found:
+                print("No manifest files found")
                 return False
 
             # Try to import database module

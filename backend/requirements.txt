@@ -1,6 +1,8 @@
 # Cursor Manager Extension - Python Backend
-# Minimal dependencies - using Python stdlib only
 
 # Python 3.8+ required
-# No external dependencies needed for core functionality
+
+# GUI dependency
+customtkinter>=5.2.0
+apscheduler>=3.10.4
 
